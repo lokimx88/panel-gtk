@@ -1345,6 +1345,20 @@ pnl_multi_paned_pan_gesture_drag_begin (PnlMultiPaned *self,
           priv->drag_begin = child;
           break;
         }
+
+      /*
+       * We want to make any child before the drag child "sticky" so that it
+       * will no longer have expand adjustments while we perform the drag
+       * operation.
+       */
+      if (gtk_widget_get_child_visible (child->widget) &&
+          gtk_widget_get_visible (child->widget))
+        {
+          child->position_set = TRUE;
+          child->position = IS_HORIZONTAL (priv->orientation)
+            ? child->alloc.width
+            : child->alloc.height;
+        }
     }
 
   if (priv->drag_begin == NULL)
