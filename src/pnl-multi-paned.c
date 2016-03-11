@@ -76,6 +76,7 @@ typedef struct
   GtkOrientation      orientation;
   PnlMultiPanedChild *drag_begin;
   gint                drag_begin_position;
+  gint                drag_extra_offset;
 } PnlMultiPanedPrivate;
 
 typedef struct
@@ -940,6 +941,7 @@ static void
 allocation_stage_positions (PnlMultiPaned   *self,
                             AllocationState *state)
 {
+  PnlMultiPanedPrivate *priv = pnl_multi_paned_get_instance_private (self);
   gint x_adjust = 0;
   gint y_adjust = 0;
   guint i;
@@ -987,6 +989,16 @@ allocation_stage_positions (PnlMultiPaned   *self,
                 }
             }
         }
+    }
+
+  /*
+   * If the user is shrinking in a drag, we might have to adjust the
+   * neighboring children too.
+   */
+
+  if (priv->drag_extra_offset < 0)
+    {
+      g_print ("Need extra shrink!\n");
     }
 }
 
@@ -1407,6 +1419,7 @@ pnl_multi_paned_pan_gesture_drag_end (PnlMultiPaned *self,
 cleanup:
   priv->drag_begin = NULL;
   priv->drag_begin_position = 0;
+  priv->drag_extra_offset = 0;
 }
 
 static void
@@ -1437,6 +1450,11 @@ pnl_multi_paned_pan_gesture_pan (PnlMultiPaned   *self,
       if (direction == GTK_PAN_DIRECTION_UP)
         offset = -offset;
     }
+
+  if ((priv->drag_begin_position + offset) < 0)
+    priv->drag_extra_offset = (priv->drag_begin_position + offset);
+  else
+    priv->drag_extra_offset = 0;
 
   priv->drag_begin->position = MAX (0, priv->drag_begin_position + offset);
   priv->drag_begin->position_set = TRUE;
