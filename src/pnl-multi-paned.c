@@ -21,6 +21,8 @@
 #define HANDLE_WIDTH  10
 #define HANDLE_HEIGHT 10
 
+#define IS_HORIZONTAL(o) (o == GTK_ORIENTATION_HORIZONTAL)
+
 typedef struct
 {
   /*
@@ -41,6 +43,13 @@ typedef struct
   gint position;
 
   /*
+   * Cached size requests to avoid extra sizing calls during
+   * the layout procedure.
+   */
+  GtkRequisition min_req;
+  GtkRequisition nat_req;
+
+  /*
    * A cached size allocation used during the size_allocate()
    * cycle. This allows us to do a first pass to allocate
    * natural sizes, and then followup when dealing with
@@ -53,6 +62,11 @@ typedef struct
    * expand so that we can give it extra space if necessary.
    */
   guint can_expand : 1;
+
+  /*
+   * If the position field has been set.
+   */
+  guint position_set : 1;
 } PnlMultiPanedChild;
 
 typedef struct
@@ -63,6 +77,37 @@ typedef struct
   PnlMultiPanedChild *drag_begin;
   gint                drag_begin_position;
 } PnlMultiPanedPrivate;
+
+typedef struct
+{
+  PnlMultiPanedChild **children;
+  guint                n_children;
+  GtkOrientation       orientation;
+  GtkAllocation        top_alloc;
+  gint                 avail_width;
+  gint                 avail_height;
+  gint                 handle_size;
+} AllocationState;
+
+typedef void (*AllocationStage) (PnlMultiPaned   *self,
+                                 AllocationState *state);
+
+static void allocation_stage_allocate      (PnlMultiPaned   *self,
+                                            AllocationState *state);
+static void allocation_stage_borders       (PnlMultiPaned   *self,
+                                            AllocationState *state);
+static void allocation_stage_cache_request (PnlMultiPaned   *self,
+                                            AllocationState *state);
+static void allocation_stage_expand        (PnlMultiPaned   *self,
+                                            AllocationState *state);
+static void allocation_stage_handles       (PnlMultiPaned   *self,
+                                            AllocationState *state);
+static void allocation_stage_minimums      (PnlMultiPaned   *self,
+                                            AllocationState *state);
+static void allocation_stage_naturals      (PnlMultiPaned   *self,
+                                            AllocationState *state);
+static void allocation_stage_positions     (PnlMultiPaned   *self,
+                                            AllocationState *state);
 
 G_DEFINE_TYPE_EXTENDED (PnlMultiPaned, pnl_multi_paned, GTK_TYPE_CONTAINER, 0,
                         G_ADD_PRIVATE (PnlMultiPaned)
@@ -92,10 +137,26 @@ enum {
   LAST_SIGNAL
 };
 
+/*
+ * TODO: Subtract drag position from neighbor when position is < 0.
+ * TODO: An obvious optimization here would be to move the constant
+ *       branches outside the loops.
+ */
+
 static GParamSpec *properties [LAST_PROP];
 static GParamSpec *child_properties [LAST_CHILD_PROP];
 static GParamSpec *style_properties [LAST_STYLE_PROP];
 static guint signals [LAST_SIGNAL];
+static AllocationStage allocation_stages[] = {
+  allocation_stage_borders,
+  allocation_stage_cache_request,
+  allocation_stage_minimums,
+  allocation_stage_handles,
+  allocation_stage_positions,
+  allocation_stage_naturals,
+  allocation_stage_expand,
+  allocation_stage_allocate,
+};
 
 static void
 pnl_multi_paned_reset_positions (PnlMultiPaned *self)
@@ -109,16 +170,15 @@ pnl_multi_paned_reset_positions (PnlMultiPaned *self)
     {
       PnlMultiPanedChild *child = &g_array_index (priv->children, PnlMultiPanedChild, i);
 
-      if (child->position != 0)
-        {
-          child->position = 0;
-          gtk_container_child_notify_by_pspec (GTK_CONTAINER (self),
-                                               child->widget,
-                                               child_properties [CHILD_PROP_POSITION]);
-        }
+      child->position = 0;
+      child->position_set = FALSE;
+
+      gtk_container_child_notify_by_pspec (GTK_CONTAINER (self),
+                                           child->widget,
+                                           child_properties [CHILD_PROP_POSITION]);
     }
 
-  gtk_widget_queue_allocate (GTK_WIDGET (self));
+  gtk_widget_queue_resize (GTK_WIDGET (self));
 }
 
 static PnlMultiPanedChild *
@@ -325,16 +385,17 @@ pnl_multi_paned_set_child_position (PnlMultiPaned *self,
 
   g_assert (PNL_IS_MULTI_PANED (self));
   g_assert (GTK_IS_WIDGET (widget));
-  g_assert (position >= 0);
+  g_assert (position >= -1);
 
   child = pnl_multi_paned_get_child (self, widget);
 
   if (child->position != position)
     {
       child->position = position;
+      child->position_set = (position != -1);
       gtk_container_child_notify_by_pspec (GTK_CONTAINER (self), widget,
                                            child_properties [CHILD_PROP_POSITION]);
-      gtk_widget_queue_allocate (GTK_WIDGET (self));
+      gtk_widget_queue_resize (GTK_WIDGET (self));
     }
 }
 
@@ -695,271 +756,350 @@ pnl_multi_paned_get_preferred_width_for_height (GtkWidget *widget,
 }
 
 static void
-pnl_multi_paned_child_size_allocate (PnlMultiPaned      *self,
-                                     PnlMultiPanedChild *children,
-                                     gint                n_children,
-                                     GtkAllocation      *allocation,
-                                     gint                total_width,
-                                     gint                total_height,
-                                     gint                handle_size)
+allocation_stage_handles (PnlMultiPaned   *self,
+                          AllocationState *state)
 {
-  PnlMultiPanedPrivate *priv = pnl_multi_paned_get_instance_private (self);
-  PnlMultiPanedChild *child = children;
-
-  g_assert (PNL_IS_MULTI_PANED (self));
-  g_assert (n_children == 0 || children != NULL);
-  g_assert (allocation != NULL);
-
-  if (n_children == 0)
-    return;
-
-  /*
-   * Size allocation is performed by determining the size request of
-   * all children towards the end of the allocation, and then comparing
-   * that to the "position" of this child. If minimum allocations
-   * require, we might fudge our position to allow for following children
-   * to fit.
-   */
-
-  if (!gtk_widget_get_visible (child->widget))
-    goto next_child;
-
-  child->alloc.x = allocation->x;
-  child->alloc.y = allocation->y;
-
-  if (priv->orientation == GTK_ORIENTATION_HORIZONTAL)
-    {
-      gint neighbor_min_width = 0;
-      gint neighbor_nat_width = 0;
-      gint child_min_width = 0;
-      gint child_nat_width = 0;
-      gint position;
-
-      gtk_widget_get_preferred_width_for_height (child->widget,
-                                                 allocation->height,
-                                                 &child_min_width,
-                                                 &child_nat_width);
-
-      pnl_multi_paned_get_child_preferred_width_for_height (self,
-                                                            children + 1,
-                                                            n_children - 1,
-                                                            allocation->height,
-                                                            &neighbor_min_width,
-                                                            &neighbor_nat_width);
-
-      child->alloc.height = allocation->height;
-
-      position = child->position;
-
-      if (position == 0)
-        position = child_nat_width;
-
-      if (position < child_min_width)
-        position = child_min_width;
-
-      if ((allocation->width - position - handle_size) < neighbor_min_width)
-        position = allocation->width - handle_size - neighbor_min_width;
-
-      child->alloc.width = position;
-
-      allocation->x += child->alloc.width + handle_size;
-      allocation->width -= child->alloc.width + handle_size;
-
-      child->can_expand = ((child->position == 0) &&
-                           gtk_widget_get_visible (child->widget) &&
-                           gtk_widget_get_child_visible (child->widget) &&
-                           gtk_widget_get_hexpand (child->widget));
-    }
-  else
-    {
-      gint neighbor_min_height = 0;
-      gint neighbor_nat_height = 0;
-      gint child_min_height = 0;
-      gint child_nat_height = 0;
-      gint position;
-
-      gtk_widget_get_preferred_height_for_width (child->widget,
-                                                 allocation->width,
-                                                 &child_min_height,
-                                                 &child_nat_height);
-
-      pnl_multi_paned_get_child_preferred_height_for_width (self,
-                                                            children + 1,
-                                                            n_children - 1,
-                                                            allocation->width,
-                                                            &neighbor_min_height,
-                                                            &neighbor_nat_height);
-
-      child->alloc.width = allocation->width;
-
-      position = child->position;
-
-      if (position == 0)
-        position = child_nat_height;
-
-      if (position < child_min_height)
-        position = child_min_height;
-
-      if ((allocation->height - position - handle_size) < neighbor_min_height)
-        position = allocation->height - handle_size - neighbor_min_height;
-
-      child->alloc.height = position;
-
-      allocation->y += child->alloc.height + handle_size;
-      allocation->height -= child->alloc.height + handle_size;
-
-      child->can_expand = ((child->position == 0) &&
-                           gtk_widget_get_visible (child->widget) &&
-                           gtk_widget_get_child_visible (child->widget) &&
-                           gtk_widget_get_vexpand (child->widget));
-    }
-
-next_child:
-  pnl_multi_paned_child_size_allocate (self,
-                                       children + 1,
-                                       n_children - 1,
-                                       allocation,
-                                       total_width,
-                                       total_height,
-                                       handle_size);
-}
-
-static void
-pnl_multi_paned_size_allocate (GtkWidget     *widget,
-                               GtkAllocation *allocation)
-{
-  PnlMultiPaned *self = (PnlMultiPaned *)widget;
-  PnlMultiPanedPrivate *priv = pnl_multi_paned_get_instance_private (self);
-  GtkAllocation old_allocation;
-  gint single_handle_size = 1;
-  gint handle_size;
-  gint total_width;
-  gint total_height;
-  gint expand_count = 0;
   guint i;
 
   g_assert (PNL_IS_MULTI_PANED (self));
-  g_assert (allocation != NULL);
-
-  gtk_widget_get_allocation (widget, &old_allocation);
-
-  GTK_WIDGET_CLASS (pnl_multi_paned_parent_class)->size_allocate (widget, allocation);
-
-  if (priv->children->len == 0)
-    return;
-
-  gtk_widget_style_get (GTK_WIDGET (self), "handle-size", &single_handle_size, NULL);
-
-  total_width = allocation->width;
-  total_height = allocation->height;
-
-  handle_size = pnl_multi_paned_calc_handle_size (self);
-
-  if (priv->orientation == GTK_ORIENTATION_HORIZONTAL)
-    total_width -= handle_size;
-  else
-    total_height -= handle_size;
-
-  pnl_multi_paned_child_size_allocate (self,
-                                       (PnlMultiPanedChild *)(gpointer)priv->children->data,
-                                       priv->children->len,
-                                       allocation,
-                                       total_width,
-                                       total_height,
-                                       single_handle_size);
+  g_assert (state != NULL);
+  g_assert (state->children != NULL);
+  g_assert (state->n_children > 0);
 
   /*
-   * If there is extra space left over in the allocation, divy it out to the
-   * children with hexpand/vexpand set.
+   * Push each child allocation forward by the sum handle widths up to
+   * their position in the paned.
    */
-  if (((priv->orientation == GTK_ORIENTATION_HORIZONTAL) && (allocation->width > 0)) ||
-      ((priv->orientation == GTK_ORIENTATION_VERTICAL) && (allocation->height > 0)))
+
+  for (i = 1; i < state->n_children; i++)
     {
-      gint extra;
-      gint mod_extra;
-      gint last_value = -1;
+      PnlMultiPanedChild *child = state->children [i];
 
-      for (i = 0; i < priv->children->len; i++)
+      if (IS_HORIZONTAL (state->orientation))
+        child->alloc.x += (i * state->handle_size);
+      else
+        child->alloc.y += (i * state->handle_size);
+    }
+
+  if (IS_HORIZONTAL (state->orientation))
+    state->avail_width -= (state->n_children - 1) * state->handle_size;
+  else
+    state->avail_height -= (state->n_children - 1) * state->handle_size;
+}
+
+static void
+allocation_stage_minimums (PnlMultiPaned   *self,
+                           AllocationState *state)
+{
+  gint next_x;
+  gint next_y;
+  guint i;
+
+  g_assert (PNL_IS_MULTI_PANED (self));
+  g_assert (state != NULL);
+  g_assert (state->children != NULL);
+  g_assert (state->n_children > 0);
+
+  next_x = state->top_alloc.x;
+  next_y = state->top_alloc.y;
+
+  for (i = 0; i < state->n_children; i++)
+    {
+      PnlMultiPanedChild *child = state->children [i];
+
+      if (IS_HORIZONTAL (state->orientation))
         {
-          PnlMultiPanedChild *child = &g_array_index (priv->children, PnlMultiPanedChild, i);
+          child->alloc.x = next_x;
+          child->alloc.y = state->top_alloc.y;
+          child->alloc.width = child->min_req.width;
+          child->alloc.height = state->top_alloc.height;
 
-          if (child->can_expand)
-            expand_count++;
-        }
+          next_x = child->alloc.x + child->alloc.width;
 
-      if (expand_count == 0)
-        return;
-
-      if (priv->orientation == GTK_ORIENTATION_HORIZONTAL)
-        {
-          extra = allocation->width / expand_count;
-          mod_extra = allocation->width % expand_count;
+          state->avail_width -= child->alloc.width;
         }
       else
         {
-          extra = allocation->height / expand_count;
-          mod_extra = allocation->height % expand_count;
+          child->alloc.x = state->top_alloc.x;
+          child->alloc.y = next_y;
+          child->alloc.width = state->top_alloc.width;
+          child->alloc.height = child->min_req.height;
+
+          next_y = child->alloc.y + child->alloc.height;
+
+          state->avail_height -= child->alloc.height;
         }
+    }
+}
 
-      if (priv->orientation == GTK_ORIENTATION_HORIZONTAL)
+static void
+allocation_stage_naturals (PnlMultiPaned   *self,
+                           AllocationState *state)
+{
+  gint x_adjust = 0;
+  gint y_adjust = 0;
+  guint i;
+
+  g_assert (PNL_IS_MULTI_PANED (self));
+  g_assert (state != NULL);
+  g_assert (state->children != NULL);
+  g_assert (state->n_children > 0);
+
+  for (i = 0; i < state->n_children; i++)
+    {
+      PnlMultiPanedChild *child = state->children [i];
+
+      child->alloc.x += x_adjust;
+      child->alloc.y += y_adjust;
+
+      if (!child->position_set)
         {
-          for (i = 0; i < priv->children->len; i++)
+          if (IS_HORIZONTAL (state->orientation))
             {
-              PnlMultiPanedChild *child = &g_array_index (priv->children, PnlMultiPanedChild, i);
-
-              if (last_value != -1)
-                child->alloc.x = last_value;
-
-              if (child->can_expand)
+              if (child->nat_req.width > child->alloc.width)
                 {
-                  child->alloc.width += extra;
+                  gint adjust = MIN (state->avail_width, child->nat_req.width - child->alloc.width);
 
-                  if (mod_extra)
-                    {
-                      child->alloc.width += 1;
-                      mod_extra--;
-                    }
+                  child->alloc.width += adjust;
+                  state->avail_width -= adjust;
+                  x_adjust += adjust;
                 }
+            }
+          else
+            {
+              if (child->nat_req.height > child->alloc.height)
+                {
+                  gint adjust = MIN (state->avail_height, child->nat_req.height - child->alloc.height);
 
-              last_value = child->alloc.x + child->alloc.width;
+                  child->alloc.height += adjust;
+                  state->avail_height -= adjust;
+                  y_adjust += adjust;
+                }
             }
         }
+    }
+}
+
+static void
+allocation_stage_borders (PnlMultiPaned   *self,
+                          AllocationState *state)
+{
+  gint border_width;
+
+  g_assert (PNL_IS_MULTI_PANED (self));
+  g_assert (state != NULL);
+  g_assert (state->children != NULL);
+  g_assert (state->n_children > 0);
+
+  border_width = gtk_container_get_border_width (GTK_CONTAINER (self));
+
+  state->top_alloc.x += border_width;
+  state->top_alloc.y += border_width;
+  state->top_alloc.width -= border_width * 2;
+  state->top_alloc.height -= border_width * 2;
+
+  if (state->top_alloc.width < 0)
+    state->top_alloc.width = 0;
+
+  if (state->top_alloc.height < 0)
+    state->top_alloc.height = 0;
+
+  state->avail_width = state->top_alloc.width;
+  state->avail_height = state->top_alloc.height;
+}
+
+static void
+allocation_stage_cache_request (PnlMultiPaned   *self,
+                                AllocationState *state)
+{
+  guint i;
+
+  g_assert (PNL_IS_MULTI_PANED (self));
+  g_assert (state != NULL);
+  g_assert (state->children != NULL);
+  g_assert (state->n_children > 0);
+
+  for (i = 0; i < state->n_children; i++)
+    {
+      PnlMultiPanedChild *child = state->children [i];
+
+      if (IS_HORIZONTAL (state->orientation))
+        gtk_widget_get_preferred_width_for_height (child->widget,
+                                                   state->avail_height,
+                                                   &child->min_req.width,
+                                                   &child->nat_req.width);
       else
+        gtk_widget_get_preferred_height_for_width (child->widget,
+                                                   state->avail_width,
+                                                   &child->min_req.height,
+                                                   &child->nat_req.height);
+    }
+}
+
+static void
+allocation_stage_positions (PnlMultiPaned   *self,
+                            AllocationState *state)
+{
+  gint x_adjust = 0;
+  gint y_adjust = 0;
+  guint i;
+
+  g_assert (PNL_IS_MULTI_PANED (self));
+  g_assert (state != NULL);
+  g_assert (state->children != NULL);
+  g_assert (state->n_children > 0);
+
+  /*
+   * Child may have a position set, which happens when dragging the input
+   * window (handle) to resize the child. If so, we want to try to allocate
+   * extra space above the minimum size.
+   */
+
+  for (i = 0; i < state->n_children; i++)
+    {
+      PnlMultiPanedChild *child = state->children [i];
+
+      child->alloc.x += x_adjust;
+      child->alloc.y += y_adjust;
+
+      if (child->position_set)
         {
-          for (i = 0; i < priv->children->len; i++)
+          if (IS_HORIZONTAL (state->orientation))
             {
-              PnlMultiPanedChild *child = &g_array_index (priv->children, PnlMultiPanedChild, i);
-
-              if (last_value != -1)
-                child->alloc.y = last_value;
-
-              if (child->can_expand)
+              if (child->position > child->alloc.width)
                 {
-                  child->alloc.height += extra;
+                  gint adjust = MIN (state->avail_width, child->position - child->alloc.width);
 
-                  if (mod_extra)
-                    {
-                      child->alloc.height += 1;
-                      mod_extra--;
-                    }
+                  child->alloc.width += adjust;
+                  state->avail_width -= adjust;
+                  x_adjust += adjust;
                 }
+            }
+          else
+            {
+              if (child->position > child->alloc.height)
+                {
+                  gint adjust = MIN (state->avail_height, child->position - child->alloc.height);
 
-              last_value = child->alloc.y + child->alloc.height;
+                  child->alloc.height += adjust;
+                  state->avail_height -= adjust;
+                  y_adjust += adjust;
+                }
+            }
+        }
+    }
+}
+
+static void
+allocation_stage_expand (PnlMultiPaned   *self,
+                         AllocationState *state)
+{
+  gint x_adjust = 0;
+  gint y_adjust = 0;
+  gint n_expand = 0;
+  gint adjust;
+  guint i;
+
+  g_assert (PNL_IS_MULTI_PANED (self));
+  g_assert (state != NULL);
+  g_assert (state->children != NULL);
+  g_assert (state->n_children > 0);
+
+  for (i = 0; i < state->n_children; i++)
+    {
+      PnlMultiPanedChild *child = state->children [i];
+
+      if (!child->position_set)
+        {
+          if (IS_HORIZONTAL (state->orientation))
+            {
+              if (gtk_widget_get_hexpand (child->widget))
+                n_expand++;
+            }
+          else
+            {
+              if (gtk_widget_get_vexpand (child->widget))
+                n_expand++;
             }
         }
     }
 
-  for (i = 0; i < priv->children->len; i++)
+  if (n_expand == 0)
+    return;
+
+  if (IS_HORIZONTAL (state->orientation))
+    adjust = state->avail_width / n_expand;
+  else
+    adjust = state->avail_height / n_expand;
+
+  for (i = 0; i < state->n_children; i++)
     {
-      PnlMultiPanedChild *child = &g_array_index (priv->children, PnlMultiPanedChild, i);
+      PnlMultiPanedChild *child = state->children [i];
 
-      if (gtk_widget_get_child_visible (child->widget) &&
-          gtk_widget_get_visible (child->widget))
-        gtk_widget_size_allocate (child->widget, &child->alloc);
+      child->alloc.x += x_adjust;
+      child->alloc.y += y_adjust;
 
-      if (child->handle != NULL && priv->children->len != (i + 1))
+      if (!child->position_set)
         {
-          if (priv->orientation == GTK_ORIENTATION_HORIZONTAL)
+          if (IS_HORIZONTAL (state->orientation))
+            {
+              if (gtk_widget_get_hexpand (child->widget))
+                {
+                  child->alloc.width += adjust;
+                  state->avail_height -= adjust;
+                  x_adjust += adjust;
+                }
+            }
+          else
+            {
+              if (gtk_widget_get_vexpand (child->widget))
+                {
+                  child->alloc.height += adjust;
+                  state->avail_height -= adjust;
+                  y_adjust += adjust;
+                }
+            }
+        }
+    }
+
+  if (IS_HORIZONTAL (state->orientation))
+    {
+      if (state->avail_width > 0)
+        {
+          state->children [state->n_children - 1]->alloc.width += state->avail_width;
+          state->avail_width = 0;
+        }
+    }
+  else
+    {
+      if (state->avail_height > 0)
+        {
+          state->children [state->n_children - 1]->alloc.height += state->avail_height;
+          state->avail_height = 0;
+        }
+    }
+}
+
+static void
+allocation_stage_allocate (PnlMultiPaned   *self,
+                           AllocationState *state)
+{
+  guint i;
+
+  g_assert (PNL_IS_MULTI_PANED (self));
+  g_assert (state != NULL);
+  g_assert (state->children != NULL);
+  g_assert (state->n_children > 0);
+
+  for (i = 0; i < state->n_children; i++)
+    {
+      PnlMultiPanedChild *child = state->children [i];
+
+      gtk_widget_size_allocate (child->widget, &child->alloc);
+
+      if ((child->handle != NULL) && (state->n_children != (i + 1)))
+        {
+          if (state->orientation == GTK_ORIENTATION_HORIZONTAL)
             {
               gdk_window_move_resize (child->handle,
                                       child->alloc.x + child->alloc.width - (HANDLE_WIDTH / 2),
@@ -975,8 +1115,71 @@ pnl_multi_paned_size_allocate (GtkWidget     *widget,
                                       child->alloc.width,
                                       HANDLE_HEIGHT);
             }
+
+          gdk_window_show (child->handle);
         }
     }
+}
+
+static void
+pnl_multi_paned_size_allocate (GtkWidget     *widget,
+                               GtkAllocation *allocation)
+{
+  PnlMultiPaned *self = (PnlMultiPaned *)widget;
+  PnlMultiPanedPrivate *priv = pnl_multi_paned_get_instance_private (self);
+  AllocationState state = { 0 };
+  GPtrArray *children;
+  guint i;
+
+  g_assert (PNL_IS_MULTI_PANED (self));
+  g_assert (allocation != NULL);
+
+  GTK_WIDGET_CLASS (pnl_multi_paned_parent_class)->size_allocate (widget, allocation);
+
+  if (priv->children->len == 0)
+    return;
+
+  children = g_ptr_array_new ();
+
+  for (i = 0; i < priv->children->len; i++)
+    {
+      PnlMultiPanedChild *child = &g_array_index (priv->children, PnlMultiPanedChild, i);
+
+      child->alloc.x = 0;
+      child->alloc.y = 0;
+      child->alloc.width = 0;
+      child->alloc.height = 0;
+
+      if (child->widget != NULL &&
+          gtk_widget_get_child_visible (child->widget) &&
+          gtk_widget_get_visible (child->widget))
+        g_ptr_array_add (children, child);
+      else if (child->handle)
+        gdk_window_hide (child->handle);
+    }
+
+  state.children = (PnlMultiPanedChild **)children->pdata;
+  state.n_children = children->len;
+
+  if (state.n_children == 0)
+    {
+      g_ptr_array_free (children, TRUE);
+      return;
+    }
+
+  gtk_widget_style_get (GTK_WIDGET (self),
+                        "handle-size", &state.handle_size,
+                        NULL);
+
+  state.orientation = priv->orientation;
+  state.top_alloc = *allocation;
+  state.avail_width = allocation->width;
+  state.avail_height = allocation->height;
+
+  for (i = 0; i < G_N_ELEMENTS (allocation_stages); i++)
+    allocation_stages [i] (self, &state);
+
+  g_ptr_array_free (children, TRUE);
 }
 
 static void
@@ -1172,7 +1375,6 @@ pnl_multi_paned_pan_gesture_drag_end (PnlMultiPaned *self,
   PnlMultiPanedPrivate *priv = pnl_multi_paned_get_instance_private (self);
   GdkEventSequence *sequence;
   GtkEventSequenceState state;
-  guint i;
 
   g_assert (PNL_IS_MULTI_PANED (self));
   g_assert (GTK_IS_GESTURE_PAN (gesture));
@@ -1223,6 +1425,7 @@ pnl_multi_paned_pan_gesture_pan (PnlMultiPaned   *self,
     }
 
   priv->drag_begin->position = MAX (0, priv->drag_begin_position + offset);
+  priv->drag_begin->position_set = TRUE;
 
   gtk_widget_queue_allocate (GTK_WIDGET (self));
 }
