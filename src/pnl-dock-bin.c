@@ -1425,6 +1425,16 @@ pnl_dock_bin_draw (GtkWidget *widget,
 
           gtk_widget_get_allocation (child->widget, &handle);
 
+          if (((child->type == PNL_DOCK_BIN_CHILD_LEFT) ||
+               (child->type == PNL_DOCK_BIN_CHILD_RIGHT)) &&
+              (handle.width <= handle_size))
+            continue;
+
+          if (((child->type == PNL_DOCK_BIN_CHILD_TOP) ||
+               (child->type == PNL_DOCK_BIN_CHILD_BOTTOM)) &&
+              (handle.height <= handle_size))
+            continue;
+
           switch (child->type)
             {
             case PNL_DOCK_BIN_CHILD_LEFT:
