@@ -328,7 +328,7 @@ pnl_multi_paned_create_child_handle (PnlMultiPaned      *self,
   attributes.window_type = GDK_WINDOW_CHILD;
   attributes.wclass = GDK_INPUT_ONLY;
   attributes.x = handle_rect.x;
-  attributes.x = -handle_rect.y;
+  attributes.y = -handle_rect.y;
   attributes.width = handle_rect.width;
   attributes.height = handle_rect.height;
   attributes.visual = gtk_widget_get_visual (GTK_WIDGET (self));
