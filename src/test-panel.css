@@ -11,14 +11,14 @@ dockpaned {
   border: 1px solid @borders;
 }
 
-tabstrip {
+docktabstrip {
   background-color: @theme_bg_color;
   padding-top: 3px;
   border-bottom: 1px solid @borders;
   padding: 0 6px 0 6px;
 }
 
-tab {
+docktab {
   background-image: none;
   background-color: transparent;
   border-color: transparent;
@@ -31,17 +31,17 @@ tab {
   transition-timing-function: ease;
 }
 
-tab:checked {
+docktab:checked {
   border-bottom-color: @theme_selected_bg_color;
   color: @theme_fg_color;
 }
 
-tab label {
+docktab label {
   font-size: 0.7em;
   font-weight: bold;
 }
 
-tab > * {
+docktab > * {
   padding: 0 6px 0 6px;
 }
 
@@ -49,16 +49,16 @@ dockoverlayedge {
   background-color: @theme_bg_color;
 }
 
-dockoverlayedge tabstrip {
+dockoverlayedge docktabstrip {
   padding: 0;
   border: none;
 }
 
-dockoverlayedge.left-edge tab:checked {
+dockoverlayedge.left-edge docktab:checked {
   border-right-color: @theme_selected_bg_color;
   border-bottom-color: transparent;
 }
-dockoverlayedge.right-edge tab:checked {
+dockoverlayedge.right-edge docktab:checked {
   border-left-color: @theme_selected_bg_color;
   border-bottom-color: transparent;
 }
