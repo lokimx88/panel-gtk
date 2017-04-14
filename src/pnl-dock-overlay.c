@@ -597,6 +597,28 @@ pnl_dock_overlay_set_child_reveal (PnlDockOverlay *self,
     }
 }
 
+static gboolean
+pnl_dock_overlay_motion_notify_event (GtkWidget      *widget,
+                                      GdkEventMotion *event)
+{
+  PnlDockOverlay *self = (PnlDockOverlay *)widget;
+  PnlDockOverlayPrivate *priv = pnl_dock_overlay_get_instance_private (self);
+  guint i;
+
+  g_assert (PNL_IS_DOCK_OVERLAY (self));
+  g_assert (event != NULL);
+
+  g_print ("motion!\n");
+
+  for (i = 0; i < G_N_ELEMENTS (priv->edges); i++)
+    {
+      //PnlDockOverlayEdge *edge = &priv->edges [i];
+
+    }
+
+  return GTK_WIDGET_CLASS (pnl_dock_overlay_parent_class)->motion_notify_event (widget, event);
+}
+
 static void
 pnl_dock_overlay_get_property (GObject    *object,
                                guint       prop_id,
@@ -692,6 +714,7 @@ pnl_dock_overlay_class_init (PnlDockOverlayClass *klass)
 
   widget_class->destroy = pnl_dock_overlay_destroy;
   widget_class->hierarchy_changed = pnl_dock_overlay_hierarchy_changed;
+  widget_class->motion_notify_event = pnl_dock_overlay_motion_notify_event;
 
   container_class->add = pnl_dock_overlay_add;
   container_class->get_child_property = pnl_dock_overlay_get_child_property;
@@ -748,6 +771,8 @@ pnl_dock_overlay_init (PnlDockOverlay *self)
 {
   PnlDockOverlayPrivate *priv = pnl_dock_overlay_get_instance_private (self);
   guint i;
+
+  gtk_widget_add_events (GTK_WIDGET (self), GDK_POINTER_MOTION_MASK);
 
   priv->overlay = g_object_new (GTK_TYPE_OVERLAY,
                                 "visible", TRUE,
