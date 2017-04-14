@@ -894,7 +894,7 @@ pnl_dock_bin_create_child_handle (PnlDockBin      *self,
   GdkWindowAttr attributes = { 0 };
   GdkDisplay *display;
   GdkWindow *parent;
-  GdkCursorType cursor_type;
+  const gchar *cursor_name;
 
   g_assert (PNL_IS_DOCK_BIN (self));
   g_assert (child != NULL);
@@ -904,9 +904,9 @@ pnl_dock_bin_create_child_handle (PnlDockBin      *self,
   display = gtk_widget_get_display (GTK_WIDGET (self));
   parent = gtk_widget_get_window (GTK_WIDGET (self));
 
-  cursor_type = (child->type == PNL_DOCK_BIN_CHILD_LEFT || child->type == PNL_DOCK_BIN_CHILD_RIGHT)
-              ? GDK_SB_H_DOUBLE_ARROW
-              : GDK_SB_V_DOUBLE_ARROW;
+  cursor_name = (child->type == PNL_DOCK_BIN_CHILD_LEFT || child->type == PNL_DOCK_BIN_CHILD_RIGHT)
+              ? "col-resize"
+              : "row-resize";
 
   attributes.window_type = GDK_WINDOW_CHILD;
   attributes.wclass = GDK_INPUT_ONLY;
@@ -920,7 +920,7 @@ pnl_dock_bin_create_child_handle (PnlDockBin      *self,
                            GDK_ENTER_NOTIFY_MASK |
                            GDK_LEAVE_NOTIFY_MASK |
                            GDK_POINTER_MOTION_MASK);
-  attributes.cursor = gdk_cursor_new_for_display (display, cursor_type);
+  attributes.cursor = gdk_cursor_new_from_name (display, cursor_name);
 
   child->handle = gdk_window_new (parent, &attributes, GDK_WA_CURSOR);
   gtk_widget_register_window (GTK_WIDGET (self), child->handle);
@@ -1824,10 +1824,33 @@ pnl_dock_bin_add_child (GtkBuildable *buildable,
     gtk_container_add (GTK_CONTAINER (parent), GTK_WIDGET (child));
 }
 
+static GObject *
+pnl_dock_bin_get_internal_child (GtkBuildable *buildable,
+                                 GtkBuilder   *builder,
+                                 const gchar  *childname)
+{
+  PnlDockBin *self = (PnlDockBin *)buildable;
+
+  g_assert (PNL_IS_DOCK_BIN (self));
+  g_assert (GTK_IS_BUILDER (builder));
+
+  if (g_strcmp0 ("top", childname) == 0)
+    return G_OBJECT (pnl_dock_bin_get_top_edge (self));
+  else if (g_strcmp0 ("bottom", childname) == 0)
+    return G_OBJECT (pnl_dock_bin_get_bottom_edge (self));
+  else if (g_strcmp0 ("right", childname) == 0)
+    return G_OBJECT (pnl_dock_bin_get_right_edge (self));
+  else if (g_strcmp0 ("left", childname) == 0)
+    return G_OBJECT (pnl_dock_bin_get_left_edge (self));
+
+  return NULL;
+}
+
 static void
 pnl_dock_bin_init_buildable_iface (GtkBuildableIface *iface)
 {
   iface->add_child = pnl_dock_bin_add_child;
+  iface->get_internal_child = pnl_dock_bin_get_internal_child;
 }
 
 static void
