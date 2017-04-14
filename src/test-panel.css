@@ -62,3 +62,7 @@ dockoverlayedge.right-edge docktab:checked {
   border-left-color: @theme_selected_bg_color;
   border-bottom-color: transparent;
 }
+
+textview {
+  padding: 12px;
+}
