@@ -608,8 +608,6 @@ pnl_dock_overlay_motion_notify_event (GtkWidget      *widget,
   g_assert (PNL_IS_DOCK_OVERLAY (self));
   g_assert (event != NULL);
 
-  g_print ("motion!\n");
-
   for (i = 0; i < G_N_ELEMENTS (priv->edges); i++)
     {
       //PnlDockOverlayEdge *edge = &priv->edges [i];
