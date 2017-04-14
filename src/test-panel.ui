@@ -107,7 +107,9 @@
                     <property name="title">Color</property>
                     <property name="visible">true</property>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkColorChooserWidget">
+                        <property name="border-width">12</property>
+                        <property name="halign">center</property>
                         <property name="visible">true</property>
                       </object>
                     </child>
