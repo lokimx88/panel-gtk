@@ -90,7 +90,7 @@
                 <property name="expand">true</property>
                 <property name="visible">true</property>
                 <child>
-                  <object class="GtkTextView">
+                  <object class="GtkTextView" id="text_view">
                     <property name="monospace">true</property>
                     <property name="visible">true</property>
                   </object>
@@ -314,8 +314,14 @@
                 <property name="title">_Symbols</property>
                 <property name="visible">true</property>
                 <child>
-                  <object class="GtkTreeView">
+                  <object class="GtkScrolledWindow">
+                    <property name="min-content-width">250</property>
                     <property name="visible">true</property>
+                    <child>
+                      <object class="GtkTreeView">
+                        <property name="visible">true</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>

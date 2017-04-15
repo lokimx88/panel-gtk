@@ -197,8 +197,10 @@ main (gint   argc,
 
   g_log_set_default_handler (log_handler, NULL);
 
-  gtk_window_present (window);
+  gtk_widget_grab_focus (GTK_WIDGET (gtk_builder_get_object (builder, "text_view")));
+
   gtk_window_maximize (window);
+  gtk_window_present (window);
   gtk_main ();
 
   g_clear_object (&builder);
