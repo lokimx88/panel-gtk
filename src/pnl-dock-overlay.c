@@ -312,11 +312,7 @@ pnl_overlay_container_forall_cb (GtkWidget *widget,
       gtk_widget_is_visible (widget) &&
       state->current_grab == widget &&
       pnl_overlay_dock_widget_is_ancestor (widget, GTK_WIDGET (state->edge)))
-    {
-      state->result = TRUE;
-    }
-  else
-    return;
+    state->result = TRUE;
 }
 
 static gboolean
