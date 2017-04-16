@@ -599,6 +599,13 @@ pnl_dock_overlay_set_child_reveal (PnlDockOverlay *self,
             duration = pnl_animation_calculate_duration (monitor, 0, alloc.height);
         }
 
+#if 0
+      g_print ("Animating %s %d msec (currently at value=%lf)\n",
+               reveal ? "in" : "out",
+               duration,
+               gtk_adjustment_get_value (priv->edge_adj [edge]));
+#endif
+
       pnl_object_animate_full (priv->edge_adj [edge],
                                PNL_ANIMATION_EASE_IN_OUT_CUBIC,
                                duration,
