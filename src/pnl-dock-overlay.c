@@ -35,6 +35,7 @@ typedef struct
   GtkAllocation       hover_borders [4];
   guint               child_reveal : 4;
   guint               child_revealed : 4;
+  guint               child_transient : 4;
 } PnlDockOverlayPrivate;
 
 static void pnl_dock_overlay_init_dock_iface      (PnlDockInterface     *iface);
@@ -653,18 +654,49 @@ pnl_dock_overlay_motion_notify_event (GtkWidget      *widget,
 
   for (i = 0; i < G_N_ELEMENTS (priv->hover_borders); i++)
     {
+      PnlDockOverlayEdge *edge = priv->edges [i];
+      GtkPositionType edge_type = pnl_dock_overlay_edge_get_position (edge);
       GtkAllocation *hover_border = &priv->hover_borders [i];
+      guint mask = 1 << edge_type;
 
       if (rectangle_contains_point (hover_border, x, y))
         {
-          PnlDockOverlayEdge *edge = priv->edges [i];
-
           /* Ignore this edge if it is already revealing */
           if (pnl_dock_overlay_get_child_reveal (self, GTK_WIDGET (edge)) ||
               pnl_dock_overlay_get_child_revealed (self, GTK_WIDGET (edge)))
             continue;
 
-          break;
+          pnl_dock_overlay_set_child_reveal (self, GTK_WIDGET (edge), TRUE);
+
+          priv->child_transient |= mask;
+        }
+      else if ((priv->child_transient & mask) != 0)
+        {
+          GtkWidget *event_widget = NULL;
+          GtkAllocation alloc;
+          gint rel_x;
+          gint rel_y;
+
+          gdk_window_get_user_data (event->window, (gpointer *)&event_widget);
+          gtk_widget_get_allocation (GTK_WIDGET (edge), &alloc);
+          gtk_widget_translate_coordinates (event_widget,
+                                            GTK_WIDGET (edge),
+                                            event->x,
+                                            event->y,
+                                            &rel_x,
+                                            &rel_y);
+
+          /*
+           * If this edge is transient, and the event window is not a
+           * descendant of the edges window, then we should dismiss the
+           * transient state.
+           */
+          if (pnl_dock_overlay_get_child_revealed (self, GTK_WIDGET (edge)) &&
+              !rectangle_contains_point (&alloc, rel_x, rel_y))
+            {
+              pnl_dock_overlay_set_child_reveal (self, GTK_WIDGET (edge), FALSE);
+              priv->child_transient &= ~mask;
+            }
         }
     }
 
