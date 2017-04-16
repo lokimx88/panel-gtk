@@ -250,7 +250,7 @@ pnl_dock_overlay_toplevel_mnemonics (PnlDockOverlay *self,
       pnl_object_animate (handle_adj,
                           PNL_ANIMATION_EASE_IN_OUT_CUBIC,
                           MNEMONIC_REVEAL_DURATION,
-                          gtk_widget_get_frame_clock (GTK_WIDGET (edge)),
+                          gtk_widget_get_frame_clock (GTK_WIDGET (self)),
                           "value", (gdouble)overlap,
                           NULL);
     }
