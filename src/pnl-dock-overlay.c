@@ -24,7 +24,6 @@
 #include "pnl-tab-strip.h"
 #include "pnl-util-private.h"
 
-#define REVEAL_DURATION 300
 #define MNEMONIC_REVEAL_DURATION 200
 
 typedef struct
@@ -507,7 +506,8 @@ typedef struct
 {
   PnlDockOverlay  *self;
   GtkWidget       *child;
-  GtkPositionType  edge;
+  GtkPositionType  edge : 2;
+  guint            revealing : 1;
 } ChildRevealState;
 
 static void
@@ -527,14 +527,12 @@ pnl_dock_overlay_child_reveal_done (gpointer user_data)
   ChildRevealState *state = (ChildRevealState *)user_data;
   PnlDockOverlay *self = state->self;
   PnlDockOverlayPrivate *priv = pnl_dock_overlay_get_instance_private (self);
-  gboolean revealed;
 
   g_assert (PNL_IS_DOCK_OVERLAY (self));
   g_assert (GTK_IS_WIDGET (state->child));
 
-  revealed = !!(priv->child_reveal & (1 << state->edge));
 
-  if (revealed)
+  if (state->revealing)
     priv->child_revealed = priv->child_revealed | (1 << state->edge);
   else
     priv->child_revealed = priv->child_revealed & ~(1 << state->edge);
@@ -571,16 +569,38 @@ pnl_dock_overlay_set_child_reveal (PnlDockOverlay *self,
 
   if (priv->child_reveal != child_reveal)
     {
+      GtkAllocation alloc;
+      GdkMonitor *monitor;
+      GdkWindow *window;
+      guint duration = 0;
+
       state = g_slice_new0 (ChildRevealState);
       state->self = g_object_ref (self);
       state->child = g_object_ref (child);
       state->edge = edge;
+      state->revealing = !!reveal;
 
       priv->child_reveal = child_reveal;
 
+      window = gtk_widget_get_window (GTK_WIDGET (self));
+
+      if (window != NULL)
+        {
+          GdkDisplay *display = gtk_widget_get_display (child);
+
+          monitor = gdk_display_get_monitor_at_window (display, window);
+
+          gtk_widget_get_allocation (child, &alloc);
+
+          if (edge == GTK_POS_LEFT || edge == GTK_POS_RIGHT)
+            duration = pnl_animation_calculate_duration (monitor, 0, alloc.width);
+          else
+            duration = pnl_animation_calculate_duration (monitor, 0, alloc.height);
+        }
+
       pnl_object_animate_full (priv->edge_adj [edge],
                                PNL_ANIMATION_EASE_IN_OUT_CUBIC,
-                               REVEAL_DURATION,
+                               duration,
                                gtk_widget_get_frame_clock (child),
                                pnl_dock_overlay_child_reveal_done,
                                state,
