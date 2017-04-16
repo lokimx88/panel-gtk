@@ -328,6 +328,29 @@
             </child>
           </object>
         </child>
+        <child type="bottom">
+          <object class="PnlDockStack">
+            <property name="visible">true</property>
+            <child>
+              <object class="PnlDockWidget">
+                <property name="expand">true</property>
+                <property name="title">_Breakpoints</property>
+                <property name="visible">true</property>
+                <child>
+                  <object class="GtkScrolledWindow">
+                    <property name="min-content-height">250</property>
+                    <property name="visible">true</property>
+                    <child>
+                      <object class="GtkTreeView">
+                        <property name="visible">true</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
       </object>
     </child>
   </object>
