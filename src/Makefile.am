@@ -8,6 +8,7 @@ BUILT_SOURCES =
 headersdir = $(includedir)/panel-gtk-@API_VERSION@
 headers_DATA = \
 	pnl-animation.h \
+	pnl-dock-bar.h \
 	pnl-dock-bin.h \
 	pnl-dock-item.h \
 	pnl-dock-manager.h \
@@ -31,6 +32,7 @@ headers_DATA = \
 libpanel_gtk_@API_VERSION@_la_SOURCES = \
 	$(headers_DATA) \
 	pnl-animation.c \
+	pnl-dock-bar.c \
 	pnl-dock-bin-edge-private.h \
 	pnl-dock-bin-edge.c \
 	pnl-dock-bin.c \

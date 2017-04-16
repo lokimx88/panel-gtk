@@ -79,97 +79,258 @@
       </object>
     </child>
     <child>
-      <object class="PnlDockOverlay" id="dockoverlay">
-        <property name="manager">manager</property>
+      <object class="GtkGrid">
         <property name="visible">true</property>
         <child>
-          <object class="PnlDockBin" id="dockbin">
+          <object class="PnlDockBar" id="left_bar">
+            <property name="position">left</property>
+            <property name="visible">true</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="PnlDockBar" id="right_bar">
+            <property name="position">right</property>
+            <property name="visible">true</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="PnlDockBar" id="bottom_bar">
+            <property name="position">bottom</property>
+            <property name="visible">true</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">1</property>
+            <property name="width">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="PnlDockOverlay" id="dockoverlay">
+            <property name="manager">manager</property>
             <property name="visible">true</property>
             <child>
-              <object class="GtkScrolledWindow">
-                <property name="expand">true</property>
+              <object class="PnlDockBin" id="dockbin">
                 <property name="visible">true</property>
                 <child>
-                  <object class="GtkTextView" id="text_view">
-                    <property name="monospace">true</property>
-                    <property name="visible">true</property>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child type="right">
-              <object class="PnlDockStack">
-                <property name="expand">true</property>
-                <property name="visible">true</property>
-                <child>
-                  <object class="PnlDockWidget">
+                  <object class="GtkScrolledWindow">
                     <property name="expand">true</property>
-                    <property name="title">Color</property>
                     <property name="visible">true</property>
                     <child>
-                      <object class="GtkColorChooserWidget">
-                        <property name="border-width">12</property>
-                        <property name="halign">center</property>
+                      <object class="GtkTextView" id="text_view">
+                        <property name="monospace">true</property>
                         <property name="visible">true</property>
                       </object>
                     </child>
                   </object>
                 </child>
-                <child>
-                  <object class="PnlDockWidget">
+                <child type="right">
+                  <object class="PnlDockStack">
                     <property name="expand">true</property>
-                    <property name="title">Swatches</property>
                     <property name="visible">true</property>
                     <child>
-                      <object class="GtkLabel">
-                        <property name="visible">true</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child type="right">
-              <object class="PnlDockStack">
-                <property name="expand">true</property>
-                <property name="visible">true</property>
-                <child>
-                  <object class="PnlDockWidget">
-                    <property name="title">Adjustments</property>
-                    <property name="visible">true</property>
-                    <child>
-                      <object class="GtkListBox">
+                      <object class="PnlDockWidget">
                         <property name="expand">true</property>
+                        <property name="title">Color</property>
                         <property name="visible">true</property>
+                        <child>
+                          <object class="GtkColorChooserWidget">
+                            <property name="border-width">12</property>
+                            <property name="halign">center</property>
+                            <property name="visible">true</property>
+                          </object>
+                        </child>
                       </object>
                     </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="PnlDockWidget">
-                    <property name="title">Styles</property>
-                    <property name="visible">true</property>
                     <child>
-                      <object class="GtkBox">
+                      <object class="PnlDockWidget">
+                        <property name="expand">true</property>
+                        <property name="title">Swatches</property>
                         <property name="visible">true</property>
-                        <property name="border-width">12</property>
-                        <property name="spacing">6</property>
-                        <property name="vexpand">false</property>
-                        <property name="valign">start</property>
                         <child>
                           <object class="GtkLabel">
-                            <property name="label">Cl_ass</property>
-                            <property name="mnemonic-widget">class_entry</property>
-                            <property name="use-underline">true</property>
                             <property name="visible">true</property>
                           </object>
                         </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="right">
+                  <object class="PnlDockStack">
+                    <property name="expand">true</property>
+                    <property name="visible">true</property>
+                    <child>
+                      <object class="PnlDockWidget">
+                        <property name="title">Adjustments</property>
+                        <property name="visible">true</property>
                         <child>
-                          <object class="GtkEntry" id="class_entry">
-                            <property name="hexpand">true</property>
+                          <object class="GtkListBox">
+                            <property name="expand">true</property>
                             <property name="visible">true</property>
                           </object>
                         </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="PnlDockWidget">
+                        <property name="title">Styles</property>
+                        <property name="visible">true</property>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="visible">true</property>
+                            <property name="border-width">12</property>
+                            <property name="spacing">6</property>
+                            <property name="vexpand">false</property>
+                            <property name="valign">start</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="label">Cl_ass</property>
+                                <property name="mnemonic-widget">class_entry</property>
+                                <property name="use-underline">true</property>
+                                <property name="visible">true</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkEntry" id="class_entry">
+                                <property name="hexpand">true</property>
+                                <property name="visible">true</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="right">
+                  <object class="PnlDockStack">
+                    <property name="expand">true</property>
+                    <property name="visible">true</property>
+                    <child>
+                      <object class="PnlDockWidget">
+                        <property name="expand">true</property>
+                        <property name="title">_Layers</property>
+                        <property name="visible">true</property>
+                        <child>
+                          <object class="GtkListBox">
+                            <property name="expand">true</property>
+                            <property name="visible">true</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="PnlDockWidget">
+                        <property name="expand">true</property>
+                        <property name="title">_Channels</property>
+                        <property name="visible">true</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="PnlDockWidget">
+                        <property name="expand">true</property>
+                        <property name="title">_Paths</property>
+                        <property name="visible">true</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="bottom">
+                  <object class="PnlDockStack">
+                    <property name="expand">true</property>
+                    <property name="visible">true</property>
+                    <child>
+                      <object class="PnlDockWidget">
+                        <property name="expand">true</property>
+                        <property name="title">_Mini Bridge</property>
+                        <property name="visible">true</property>
+                        <child>
+                          <object class="GtkListBox">
+                            <property name="expand">true</property>
+                            <property name="visible">true</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="PnlDockWidget">
+                        <property name="expand">true</property>
+                        <property name="title">_Timeline</property>
+                        <property name="visible">true</property>
+                        <child>
+                          <object class="GtkListBox">
+                            <property name="visible">true</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="left">
+                  <object class="PnlDockStack">
+                    <property name="visible">true</property>
+                    <child>
+                      <object class="PnlDockWidget">
+                        <property name="expand">true</property>
+                        <property name="title">_Files</property>
+                        <property name="visible">true</property>
+                        <child>
+                          <object class="GtkListBox">
+                            <property name="visible">true</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="label">Some Item</property>
+                                <property name="xalign">0</property>
+                                <property name="visible">true</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="PnlDockWidget">
+                        <property name="expand">true</property>
+                        <property name="title">Targets</property>
+                        <property name="visible">true</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="left">
+                  <object class="PnlDockStack">
+                    <property name="visible">true</property>
+                    <child>
+                      <object class="PnlDockWidget">
+                        <property name="expand">true</property>
+                        <property name="title">Documentation</property>
+                        <property name="visible">true</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child type="left">
+              <object class="PnlDockStack">
+                <property name="visible">true</property>
+                <child>
+                  <object class="PnlDockWidget">
+                    <property name="expand">true</property>
+                    <property name="title">_Documentation</property>
+                    <property name="visible">true</property>
+                    <child>
+                      <object class="GtkEntry">
+                        <property name="margin">20</property>
+                        <property name="valign">start</property>
+                        <property name="can-focus">true</property>
+                        <property name="visible">true</property>
                       </object>
                     </child>
                   </object>
@@ -178,83 +339,41 @@
             </child>
             <child type="right">
               <object class="PnlDockStack">
-                <property name="expand">true</property>
                 <property name="visible">true</property>
                 <child>
                   <object class="PnlDockWidget">
                     <property name="expand">true</property>
-                    <property name="title">_Layers</property>
+                    <property name="title">_Symbols</property>
                     <property name="visible">true</property>
                     <child>
-                      <object class="GtkListBox">
-                        <property name="expand">true</property>
+                      <object class="GtkScrolledWindow">
+                        <property name="min-content-width">250</property>
                         <property name="visible">true</property>
+                        <child>
+                          <object class="GtkTreeView">
+                            <property name="visible">true</property>
+                          </object>
+                        </child>
                       </object>
                     </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="PnlDockWidget">
-                    <property name="expand">true</property>
-                    <property name="title">_Channels</property>
-                    <property name="visible">true</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="PnlDockWidget">
-                    <property name="expand">true</property>
-                    <property name="title">_Paths</property>
-                    <property name="visible">true</property>
                   </object>
                 </child>
               </object>
             </child>
             <child type="bottom">
               <object class="PnlDockStack">
-                <property name="expand">true</property>
                 <property name="visible">true</property>
                 <child>
                   <object class="PnlDockWidget">
                     <property name="expand">true</property>
-                    <property name="title">_Mini Bridge</property>
+                    <property name="title">_Breakpoints</property>
                     <property name="visible">true</property>
                     <child>
-                      <object class="GtkListBox">
-                        <property name="expand">true</property>
-                        <property name="visible">true</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="PnlDockWidget">
-                    <property name="expand">true</property>
-                    <property name="title">_Timeline</property>
-                    <property name="visible">true</property>
-                    <child>
-                      <object class="GtkListBox">
-                        <property name="visible">true</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child type="left">
-              <object class="PnlDockStack">
-                <property name="visible">true</property>
-                <child>
-                  <object class="PnlDockWidget">
-                    <property name="expand">true</property>
-                    <property name="title">_Files</property>
-                    <property name="visible">true</property>
-                    <child>
-                      <object class="GtkListBox">
+                      <object class="GtkScrolledWindow">
+                        <property name="min-content-height">250</property>
                         <property name="visible">true</property>
                         <child>
-                          <object class="GtkLabel">
-                            <property name="label">Some Item</property>
-                            <property name="xalign">0</property>
+                          <object class="GtkTreeView">
                             <property name="visible">true</property>
                           </object>
                         </child>
@@ -262,94 +381,12 @@
                     </child>
                   </object>
                 </child>
-                <child>
-                  <object class="PnlDockWidget">
-                    <property name="expand">true</property>
-                    <property name="title">Targets</property>
-                    <property name="visible">true</property>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child type="left">
-              <object class="PnlDockStack">
-                <property name="visible">true</property>
-                <child>
-                  <object class="PnlDockWidget">
-                    <property name="expand">true</property>
-                    <property name="title">Documentation</property>
-                    <property name="visible">true</property>
-                  </object>
-                </child>
               </object>
             </child>
           </object>
-        </child>
-        <child type="left">
-          <object class="PnlDockStack">
-            <property name="visible">true</property>
-            <child>
-              <object class="PnlDockWidget">
-                <property name="expand">true</property>
-                <property name="title">_Documentation</property>
-                <property name="visible">true</property>
-                <child>
-                  <object class="GtkEntry">
-                    <property name="margin">20</property>
-                    <property name="valign">start</property>
-                    <property name="can-focus">true</property>
-                    <property name="visible">true</property>
-                  </object>
-                </child>
-              </object>
-            </child>
-          </object>
-        </child>
-        <child type="right">
-          <object class="PnlDockStack">
-            <property name="visible">true</property>
-            <child>
-              <object class="PnlDockWidget">
-                <property name="expand">true</property>
-                <property name="title">_Symbols</property>
-                <property name="visible">true</property>
-                <child>
-                  <object class="GtkScrolledWindow">
-                    <property name="min-content-width">250</property>
-                    <property name="visible">true</property>
-                    <child>
-                      <object class="GtkTreeView">
-                        <property name="visible">true</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-          </object>
-        </child>
-        <child type="bottom">
-          <object class="PnlDockStack">
-            <property name="visible">true</property>
-            <child>
-              <object class="PnlDockWidget">
-                <property name="expand">true</property>
-                <property name="title">_Breakpoints</property>
-                <property name="visible">true</property>
-                <child>
-                  <object class="GtkScrolledWindow">
-                    <property name="min-content-height">250</property>
-                    <property name="visible">true</property>
-                    <child>
-                      <object class="GtkTreeView">
-                        <property name="visible">true</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-          </object>
+          <packing>
+            <property name="left-attach">1</property>
+          </packing>
         </child>
       </object>
     </child>

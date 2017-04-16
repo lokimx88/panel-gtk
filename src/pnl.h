@@ -26,6 +26,7 @@ G_BEGIN_DECLS
 #define PNL_INSIDE
 
 #include "pnl-dock.h"
+#include "pnl-dock-bar.h"
 #include "pnl-dock-bin.h"
 #include "pnl-dock-bin-edge.h"
 #include "pnl-dock-item.h"
