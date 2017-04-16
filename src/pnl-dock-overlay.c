@@ -621,6 +621,26 @@ pnl_dock_overlay_set_child_reveal (PnlDockOverlay *self,
     }
 }
 
+static gboolean
+widget_descendant_contains_focus (GtkWidget *widget)
+{
+  GtkWidget *toplevel;
+
+  g_assert (GTK_IS_WIDGET (widget));
+
+  toplevel = gtk_widget_get_toplevel (widget);
+
+  if (GTK_IS_WINDOW (toplevel))
+    {
+      GtkWidget *focus = gtk_window_get_focus (GTK_WINDOW (toplevel));
+
+      if (focus != NULL)
+        return gtk_widget_is_ancestor (focus, widget);
+    }
+
+  return FALSE;
+}
+
 static inline gboolean
 rectangle_contains_point (const GdkRectangle *a, gint x, gint y)
 {
@@ -692,7 +712,8 @@ pnl_dock_overlay_motion_notify_event (GtkWidget      *widget,
            * transient state.
            */
           if (pnl_dock_overlay_get_child_revealed (self, GTK_WIDGET (edge)) &&
-              !rectangle_contains_point (&alloc, rel_x, rel_y))
+              !rectangle_contains_point (&alloc, rel_x, rel_y) &&
+              !widget_descendant_contains_focus (GTK_WIDGET (edge)))
             {
               pnl_dock_overlay_set_child_reveal (self, GTK_WIDGET (edge), FALSE);
               priv->child_transient &= ~mask;
