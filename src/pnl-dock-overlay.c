@@ -532,7 +532,6 @@ pnl_dock_overlay_child_reveal_done (gpointer user_data)
   g_assert (PNL_IS_DOCK_OVERLAY (self));
   g_assert (GTK_IS_WIDGET (state->child));
 
-
   if (state->revealing)
     priv->child_revealed = priv->child_revealed | (1 << state->edge);
   else
@@ -621,21 +620,52 @@ pnl_dock_overlay_set_child_reveal (PnlDockOverlay *self,
     }
 }
 
+static inline gboolean
+rectangle_contains_point (const GdkRectangle *a, gint x, gint y)
+{
+  return x >= a->x &&
+         x <= (a->x + a->width) &&
+         y >= a->y &&
+         y <= (a->y + a->height);
+}
+
 static gboolean
 pnl_dock_overlay_motion_notify_event (GtkWidget      *widget,
                                       GdkEventMotion *event)
 {
   PnlDockOverlay *self = (PnlDockOverlay *)widget;
   PnlDockOverlayPrivate *priv = pnl_dock_overlay_get_instance_private (self);
+  GdkWindow *iter;
+  GdkWindow *window;
+  gdouble x, y;
   guint i;
 
   g_assert (PNL_IS_DOCK_OVERLAY (self));
   g_assert (event != NULL);
 
-  for (i = 0; i < G_N_ELEMENTS (priv->edges); i++)
-    {
-      //PnlDockOverlayEdge *edge = &priv->edges [i];
+  window = gtk_widget_get_window (widget);
 
+  x = event->x;
+  y = event->y;
+
+  for (iter = event->window; iter != window; iter = gdk_window_get_parent (iter))
+    gdk_window_coords_to_parent (iter, x, y, &x, &y);
+
+  for (i = 0; i < G_N_ELEMENTS (priv->hover_borders); i++)
+    {
+      GtkAllocation *hover_border = &priv->hover_borders [i];
+
+      if (rectangle_contains_point (hover_border, x, y))
+        {
+          PnlDockOverlayEdge *edge = priv->edges [i];
+
+          /* Ignore this edge if it is already revealing */
+          if (pnl_dock_overlay_get_child_reveal (self, GTK_WIDGET (edge)) ||
+              pnl_dock_overlay_get_child_revealed (self, GTK_WIDGET (edge)))
+            continue;
+
+          break;
+        }
     }
 
   return GTK_WIDGET_CLASS (pnl_dock_overlay_parent_class)->motion_notify_event (widget, event);
