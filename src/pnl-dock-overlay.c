@@ -32,6 +32,7 @@ typedef struct
   PnlDockOverlayEdge *edges [4];
   GtkAdjustment      *edge_adj [4];
   GtkAdjustment      *edge_handle_adj [4];
+  GtkAllocation       hover_borders [4];
   guint               child_reveal : 4;
   guint               child_revealed : 4;
 } PnlDockOverlayPrivate;
@@ -634,6 +635,53 @@ pnl_dock_overlay_motion_notify_event (GtkWidget      *widget,
 }
 
 static void
+pnl_dock_overlay_size_allocate (GtkWidget     *widget,
+                                GtkAllocation *alloc)
+{
+  PnlDockOverlay *self = (PnlDockOverlay *)widget;
+  PnlDockOverlayPrivate *priv = pnl_dock_overlay_get_instance_private (self);
+  GtkAllocation copy;
+  GtkAllocation *edge;
+
+  g_assert (PNL_IS_DOCK_OVERLAY (self));
+  g_assert (alloc != NULL);
+
+  copy = *alloc;
+  copy.x = 0;
+  copy.y = 0;
+
+#define GRAB_AREA 15
+
+  edge = &priv->hover_borders [GTK_POS_TOP];
+  edge->x = copy.x;
+  edge->y = copy.y;
+  edge->width = copy.width;
+  edge->height = GRAB_AREA;
+
+  edge = &priv->hover_borders [GTK_POS_LEFT];
+  edge->x = copy.x;
+  edge->y = copy.y;
+  edge->width = GRAB_AREA;
+  edge->height = copy.height;
+
+  edge = &priv->hover_borders [GTK_POS_RIGHT];
+  edge->x = copy.x + copy.width - GRAB_AREA;
+  edge->y = copy.y;
+  edge->width = GRAB_AREA;
+  edge->height = copy.height;
+
+  edge = &priv->hover_borders [GTK_POS_BOTTOM];
+  edge->x = copy.x;
+  edge->y = copy.y + copy.height - GRAB_AREA;
+  edge->width = copy.width;
+  edge->height = GRAB_AREA;
+
+#undef GRAB_AREA
+
+  GTK_WIDGET_CLASS (pnl_dock_overlay_parent_class)->size_allocate (widget, alloc);
+}
+
+static void
 pnl_dock_overlay_get_property (GObject    *object,
                                guint       prop_id,
                                GValue     *value,
@@ -729,6 +777,7 @@ pnl_dock_overlay_class_init (PnlDockOverlayClass *klass)
   widget_class->destroy = pnl_dock_overlay_destroy;
   widget_class->hierarchy_changed = pnl_dock_overlay_hierarchy_changed;
   widget_class->motion_notify_event = pnl_dock_overlay_motion_notify_event;
+  widget_class->size_allocate = pnl_dock_overlay_size_allocate;
 
   container_class->add = pnl_dock_overlay_add;
   container_class->get_child_property = pnl_dock_overlay_get_child_property;
