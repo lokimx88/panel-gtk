@@ -816,17 +816,19 @@ pnl_dock_overlay_init (PnlDockOverlay *self)
 
       priv->edge_adj [i] = gtk_adjustment_new (1, 0, 1, 0, 0, 0);
 
-      g_signal_connect_swapped (priv->edge_adj [i],
-                                "value-changed",
-                                G_CALLBACK (gtk_widget_queue_allocate),
-                                priv->overlay);
+      g_signal_connect_object (priv->edge_adj [i],
+                               "value-changed",
+                               G_CALLBACK (gtk_widget_queue_allocate),
+                               priv->overlay,
+                               G_CONNECT_SWAPPED);
 
       priv->edge_handle_adj [i] = gtk_adjustment_new (0, 0, 1000, 0, 0, 0);
 
-      g_signal_connect_swapped (priv->edge_handle_adj [i],
-                                "value-changed",
-                                G_CALLBACK (gtk_widget_queue_allocate),
-                                priv->overlay);
+      g_signal_connect_object (priv->edge_handle_adj [i],
+                               "value-changed",
+                               G_CALLBACK (gtk_widget_queue_allocate),
+                               priv->overlay,
+                               G_CONNECT_SWAPPED);
     }
 }
 
