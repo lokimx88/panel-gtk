@@ -19,7 +19,7 @@ tab:hover {
   border-bottom-color: @borders;
 }
 
-tab button label {
+tab label {
   color: @theme_fg_color;
   font-size: 0.7em;
   font-weight: bold;
