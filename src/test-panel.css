@@ -8,9 +8,15 @@ tab {
   transition-timing-function: ease;
 }
 
+tab:hover:checked,
 tab:checked {
   border-color: transparent;
   border-bottom-color: @theme_selected_bg_color;
+}
+
+tab:hover {
+  border-color: transparent;
+  border-bottom-color: @borders;
 }
 
 tab button label {
