@@ -454,3 +454,49 @@ pnl_dock_item_set_child_visible (PnlDockItem *self,
   if (PNL_DOCK_ITEM_GET_IFACE (self)->set_child_visible)
     PNL_DOCK_ITEM_GET_IFACE (self)->set_child_visible (self, child, child_visible);
 }
+
+/**
+ * pnl_dock_item_get_can_close:
+ * @self: a #PnlDockItem
+ *
+ * If this dock item can be closed by the user, this virtual function should be
+ * implemented by the panel and return %TRUE.
+ *
+ * Returns: %TRUE if the dock item can be closed by the user, otherwise %FALSE.
+ */
+gboolean
+pnl_dock_item_get_can_close (PnlDockItem *self)
+{
+  g_return_val_if_fail (PNL_IS_DOCK_ITEM (self), FALSE);
+
+  if (PNL_DOCK_ITEM_GET_IFACE (self)->get_can_close)
+    return PNL_DOCK_ITEM_GET_IFACE (self)->get_can_close (self);
+
+  return FALSE;
+}
+
+/**
+ * pnl_dock_item_close:
+ * @self: a #PnlDockItem
+ *
+ * This function will request that the dock item close itself.
+ *
+ * Returns: %TRUE if the dock item was closed
+ */
+gboolean
+pnl_dock_item_close (PnlDockItem *self)
+{
+  g_return_val_if_fail (PNL_IS_DOCK_ITEM (self), FALSE);
+
+  if (pnl_dock_item_get_can_close (self))
+    {
+      if (PNL_DOCK_ITEM_GET_IFACE (self)->close)
+        return PNL_DOCK_ITEM_GET_IFACE (self)->close (self);
+
+      gtk_widget_destroy (GTK_WIDGET (self));
+
+      return TRUE;
+    }
+
+  return FALSE;
+}
