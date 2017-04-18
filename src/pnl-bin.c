@@ -36,19 +36,19 @@ static gboolean
 pnl_bin_draw (GtkWidget *widget,
               cairo_t   *cr)
 {
-  GtkStyleContext *style_context;
   GtkAllocation alloc;
+  GtkBorder margin;
+  GtkStyleContext *style_context;
   GtkWidget *child;
   GtkStateFlags state;
-  GtkBorder margin;
+
+  g_assert (PNL_IS_BIN (widget));
+
+  gtk_widget_get_allocation (widget, &alloc);
 
   style_context = gtk_widget_get_style_context (widget);
   state = gtk_widget_get_state_flags (widget);
   gtk_style_context_get_margin (style_context, state, &margin);
-
-  child = gtk_bin_get_child (GTK_BIN (widget));
-
-  gtk_widget_get_allocation (widget, &alloc);
 
   gtk_render_background (style_context, cr,
                          margin.left,
@@ -56,6 +56,13 @@ pnl_bin_draw (GtkWidget *widget,
                          alloc.width - margin.left - margin.right,
                          alloc.height - margin.top - margin.bottom);
 
+  gtk_render_frame (style_context, cr,
+                    margin.left,
+                    margin.top,
+                    alloc.width - margin.left - margin.right,
+                    alloc.height - margin.top - margin.bottom);
+
+  child = gtk_bin_get_child (GTK_BIN (widget));
   if (child != NULL)
     gtk_container_propagate_draw (GTK_CONTAINER (widget), child, cr);
 
