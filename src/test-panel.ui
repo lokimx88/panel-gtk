@@ -135,6 +135,7 @@
                     <property name="visible">true</property>
                     <child>
                       <object class="PnlDockWidget">
+                        <property name="can-close">true</property>
                         <property name="expand">true</property>
                         <property name="title">Color</property>
                         <property name="visible">true</property>
@@ -149,6 +150,7 @@
                     </child>
                     <child>
                       <object class="PnlDockWidget">
+                        <property name="can-close">true</property>
                         <property name="expand">true</property>
                         <property name="title">Swatches</property>
                         <property name="visible">true</property>
@@ -247,6 +249,7 @@
                     <property name="visible">true</property>
                     <child>
                       <object class="PnlDockWidget">
+                        <property name="can-close">true</property>
                         <property name="expand">true</property>
                         <property name="title">_Mini Bridge</property>
                         <property name="visible">true</property>
@@ -260,6 +263,7 @@
                     </child>
                     <child>
                       <object class="PnlDockWidget">
+                        <property name="can-close">true</property>
                         <property name="expand">true</property>
                         <property name="title">_Timeline</property>
                         <property name="visible">true</property>
