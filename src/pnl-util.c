@@ -16,6 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define G_LOG_DOMAIN "pnl-util"
+
+#include <string.h>
+
 #include "pnl-util-private.h"
 
 static void
@@ -106,4 +110,92 @@ pnl_gtk_bin_size_allocate (GtkWidget     *widget,
   allocation->height -= border_width * 2;
 
   gtk_widget_size_allocate (child, allocation);
+}
+
+gboolean
+pnl_gtk_widget_activate_action (GtkWidget   *widget,
+                                const gchar *full_action_name,
+                                GVariant    *parameter)
+{
+  GtkWidget *toplevel;
+  GApplication *app;
+  GActionGroup *group = NULL;
+  gchar *prefix = NULL;
+  gchar *action_name = NULL;
+  const gchar *dot;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GTK_IS_WIDGET (widget), FALSE);
+  g_return_val_if_fail (full_action_name, FALSE);
+
+  dot = strchr (full_action_name, '.');
+
+  if (dot == NULL)
+    {
+      prefix = NULL;
+      action_name = g_strdup (full_action_name);
+    }
+  else
+    {
+      prefix = g_strndup (full_action_name, dot - full_action_name);
+      action_name = g_strdup (dot + 1);
+    }
+
+  /*
+   * TODO: Support non-grouped names. We need to walk
+   *       through all the groups at each level to do this.
+   */
+  if (prefix == NULL)
+    prefix = g_strdup ("win");
+
+  app = g_application_get_default ();
+  toplevel = gtk_widget_get_toplevel (widget);
+
+  while ((group == NULL) && (widget != NULL))
+    {
+      group = gtk_widget_get_action_group (widget, prefix);
+
+      if G_UNLIKELY (GTK_IS_POPOVER (widget))
+        {
+          GtkWidget *relative_to;
+
+          relative_to = gtk_popover_get_relative_to (GTK_POPOVER (widget));
+
+          if (relative_to != NULL)
+            widget = relative_to;
+          else
+            widget = gtk_widget_get_parent (widget);
+        }
+      else
+        {
+          widget = gtk_widget_get_parent (widget);
+        }
+    }
+
+  if (!group && g_str_equal (prefix, "win") && G_IS_ACTION_GROUP (toplevel))
+    group = G_ACTION_GROUP (toplevel);
+
+  if (!group && g_str_equal (prefix, "app") && G_IS_ACTION_GROUP (app))
+    group = G_ACTION_GROUP (app);
+
+  if (group && g_action_group_has_action (group, action_name))
+    {
+      g_action_group_activate_action (group, action_name, parameter);
+      ret = TRUE;
+      goto cleanup;
+    }
+
+  if (parameter && g_variant_is_floating (parameter))
+    {
+      parameter = g_variant_ref_sink (parameter);
+      g_variant_unref (parameter);
+    }
+
+  g_warning ("Failed to locate action %s.%s", prefix, action_name);
+
+cleanup:
+  g_free (prefix);
+  g_free (action_name);
+
+  return ret;
 }
