@@ -23,20 +23,52 @@
 typedef struct
 {
   gchar *title;
+  guint can_close : 1;
 } PnlDockWidgetPrivate;
+
+static void dock_item_iface_init (PnlDockItemInterface *iface);
 
 G_DEFINE_TYPE_EXTENDED (PnlDockWidget, pnl_dock_widget, GTK_TYPE_BIN, 0,
                         G_ADD_PRIVATE (PnlDockWidget)
-                        G_IMPLEMENT_INTERFACE (PNL_TYPE_DOCK_ITEM, NULL))
+                        G_IMPLEMENT_INTERFACE (PNL_TYPE_DOCK_ITEM, dock_item_iface_init))
 
 enum {
   PROP_0,
+  PROP_CAN_CLOSE,
   PROP_MANAGER,
   PROP_TITLE,
   N_PROPS
 };
 
 static GParamSpec *properties [N_PROPS];
+
+static gboolean
+pnl_dock_widget_get_can_close (PnlDockItem *item)
+{
+  PnlDockWidget *self = (PnlDockWidget *)item;
+  PnlDockWidgetPrivate *priv = pnl_dock_widget_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_DOCK_WIDGET (self), FALSE);
+
+  return priv->can_close;
+}
+
+static void
+pnl_dock_widget_set_can_close (PnlDockWidget *self,
+                               gboolean       can_close)
+{
+  PnlDockWidgetPrivate *priv = pnl_dock_widget_get_instance_private (self);
+
+  g_return_if_fail (PNL_IS_DOCK_WIDGET (self));
+
+  can_close = !!can_close;
+
+  if (can_close != priv->can_close)
+    {
+      priv->can_close = can_close;
+      g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_CAN_CLOSE]);
+    }
+}
 
 static void
 pnl_dock_widget_grab_focus (GtkWidget *widget)
@@ -75,6 +107,10 @@ pnl_dock_widget_get_property (GObject    *object,
 
   switch (prop_id)
     {
+    case PROP_CAN_CLOSE:
+      g_value_set_boolean (value, pnl_dock_widget_get_can_close (PNL_DOCK_ITEM (self)));
+      break;
+
     case PROP_MANAGER:
       g_value_set_object (value, pnl_dock_item_get_manager (PNL_DOCK_ITEM (self)));
       break;
@@ -98,6 +134,10 @@ pnl_dock_widget_set_property (GObject      *object,
 
   switch (prop_id)
     {
+    case PROP_CAN_CLOSE:
+      pnl_dock_widget_set_can_close (self, g_value_get_boolean (value));
+      break;
+
     case PROP_MANAGER:
       pnl_dock_item_set_manager (PNL_DOCK_ITEM (self), g_value_get_object (value));
       break;
@@ -125,19 +165,26 @@ pnl_dock_widget_class_init (PnlDockWidgetClass *klass)
   widget_class->grab_focus = pnl_dock_widget_grab_focus;
   widget_class->size_allocate = pnl_gtk_bin_size_allocate;
 
+  properties [PROP_CAN_CLOSE] =
+    g_param_spec_boolean ("can-close",
+                          "Can Close",
+                          "If the dock widget can be closed by the user",
+                          FALSE,
+                          (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
   properties [PROP_MANAGER] =
     g_param_spec_object ("manager",
                          "Manager",
                          "The panel manager",
                          PNL_TYPE_DOCK_MANAGER,
-                         (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+                         (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
 
   properties [PROP_TITLE] =
     g_param_spec_string ("title",
                          "Title",
                          "Title",
                          NULL,
-                         (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+                         (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_properties (object_class, N_PROPS, properties);
 
@@ -181,4 +228,10 @@ pnl_dock_widget_set_title (PnlDockWidget *self,
       priv->title = g_strdup (title);
       g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_TITLE]);
     }
+}
+
+static void
+dock_item_iface_init (PnlDockItemInterface *iface)
+{
+  iface->get_can_close = pnl_dock_widget_get_can_close;
 }
