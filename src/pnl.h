@@ -43,6 +43,7 @@ G_BEGIN_DECLS
 
 #include "pnl-version.h"
 
+#include "pnl-bin.h"
 #include "pnl-tab.h"
 #include "pnl-tab-strip.h"
 #include "pnl-multi-paned.h"

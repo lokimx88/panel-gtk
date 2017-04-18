@@ -1,5 +1,5 @@
 lib_LTLIBRARIES = libpanel-gtk-@API_VERSION@.la
-noinst_PROGRAMS = test-panel test-multi-paned test-tab-strip
+noinst_PROGRAMS = test-panel test-multi-paned test-tab-strip test-bin
 
 DISTCLEANFILES =
 CLEANFILES =
@@ -8,6 +8,7 @@ BUILT_SOURCES =
 headersdir = $(includedir)/panel-gtk-@API_VERSION@
 headers_DATA = \
 	pnl-animation.h \
+	pnl-bin.h \
 	pnl-dock-bar.h \
 	pnl-dock-bin.h \
 	pnl-dock-item.h \
@@ -32,6 +33,7 @@ headers_DATA = \
 libpanel_gtk_@API_VERSION@_la_SOURCES = \
 	$(headers_DATA) \
 	pnl-animation.c \
+	pnl-bin.c \
 	pnl-dock-bar.c \
 	pnl-dock-bin-edge-private.h \
 	pnl-dock-bin-edge.c \
@@ -78,6 +80,12 @@ test_panel_LDADD = \
 	$(PANEL_GTK_LIBS) \
 	libpanel-gtk-@API_VERSION@.la
 test_panel_CFLAGS = $(PANEL_GTK_CFLAGS)
+
+test_bin_SOURCES = test-bin.c
+test_bin_LDADD = \
+	$(PANEL_GTK_LIBS) \
+	libpanel-gtk-@API_VERSION@.la
+test_bin_CFLAGS = $(PANEL_GTK_CFLAGS)
 
 test_multi_paned_SOURCES = test-multi-paned.c
 test_multi_paned_LDADD = \
