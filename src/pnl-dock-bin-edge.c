@@ -250,6 +250,4 @@ pnl_dock_bin_edge_init (PnlDockBinEdge *self)
                         "visible", TRUE,
                         NULL);
   GTK_CONTAINER_CLASS (pnl_dock_bin_edge_parent_class)->add (GTK_CONTAINER (self), child);
-
-  pnl_dock_bin_edge_update_edge (self);
 }
