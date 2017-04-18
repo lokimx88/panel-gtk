@@ -54,6 +54,16 @@ typedef struct
   GVariant *action_target_value;
 
   /*
+   * Because we don't have access to GtkActionMuxer or GtkActionHelper
+   * from inside of Gtk, we need to manually track the state of the
+   * action we are monitoring.
+   *
+   * We hold a pointer to the group so we can disconnect as necessary.
+   */
+  GActionGroup *action_group;
+  gulong action_state_changed_handler;
+
+  /*
    * These are our control widgets. The box contains the title in the
    * center with the minimize/close buttons to a side, depending on the
    * orientation/edge of the tabs.
@@ -99,17 +109,37 @@ static GParamSpec *properties [N_PROPS];
 static guint signals [N_SIGNALS];
 
 static void
-pnl_tab_activate (PnlTab *self)
+pnl_tab_apply_state (PnlTab *self)
 {
   PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
 
   g_assert (PNL_IS_TAB (self));
 
-  if (priv->in_activate || priv->action_name == NULL)
+  if (priv->active)
+    gtk_widget_set_state_flags (GTK_WIDGET (self), GTK_STATE_FLAG_CHECKED, FALSE);
+  else
+    gtk_widget_unset_state_flags (GTK_WIDGET (self), GTK_STATE_FLAG_CHECKED);
+}
+
+static void
+pnl_tab_activate (PnlTab *self)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+  g_autoptr(GVariant) value = NULL;
+
+  g_assert (PNL_IS_TAB (self));
+
+  if (priv->in_activate ||
+      priv->action_name == NULL ||
+      priv->action_target_value == NULL)
     return;
 
   priv->in_activate = TRUE;
-  pnl_gtk_widget_activate_action (GTK_WIDGET (self), priv->action_name, priv->action_target_value);
+
+  value = pnl_gtk_widget_get_action_state (GTK_WIDGET (self), priv->action_name);
+  if (value != NULL && !g_variant_equal (value, priv->action_target_value))
+    pnl_gtk_widget_activate_action (GTK_WIDGET (self), priv->action_name, priv->action_target_value);
+
   priv->in_activate = FALSE;
 }
 
@@ -118,6 +148,14 @@ pnl_tab_destroy (GtkWidget *widget)
 {
   PnlTab *self = (PnlTab *)widget;
   PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  if (priv->action_group != NULL)
+    {
+      g_signal_handler_disconnect (priv->action_group,
+                                   priv->action_state_changed_handler);
+      priv->action_state_changed_handler = 0;
+      pnl_clear_weak_pointer (&priv->action_group);
+    }
 
   pnl_clear_weak_pointer (&priv->widget);
   g_clear_pointer (&priv->action_name, g_free);
@@ -294,6 +332,94 @@ pnl_tab_realize (GtkWidget *widget)
 }
 
 static void
+pnl_tab_action_state_changed (PnlTab       *self,
+                              const gchar  *action_name,
+                              GVariant     *value,
+                              GActionGroup *group)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+  gboolean active;
+
+  g_assert (PNL_IS_TAB (self));
+  g_assert (action_name != NULL);
+  g_assert (G_IS_ACTION_GROUP (group));
+
+  active = (value != NULL &&
+            priv->action_target_value != NULL &&
+            g_variant_equal (value, priv->action_target_value));
+
+  if (active != priv->active)
+    {
+      priv->active = active;
+      pnl_tab_apply_state (self);
+      g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_ACTIVE]);
+    }
+}
+
+static void
+pnl_tab_monitor_action_group (PnlTab       *self,
+                              GActionGroup *group)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_if_fail (PNL_IS_TAB (self));
+  g_return_if_fail (!group || G_IS_ACTION_GROUP (group));
+
+  if (group != priv->action_group)
+    {
+      if (priv->action_group != NULL)
+        {
+          g_signal_handler_disconnect (priv->action_group,
+                                       priv->action_state_changed_handler);
+          priv->action_state_changed_handler = 0;
+          pnl_clear_weak_pointer (&priv->action_group);
+        }
+
+      if (group != NULL)
+        {
+          gchar *prefix = NULL;
+          gchar *name = NULL;
+
+          pnl_g_action_name_parse (priv->action_name, &prefix, &name);
+
+          if (name != NULL)
+            {
+              gchar *detailed;
+
+              detailed = g_strdup_printf ("action-state-changed::%s", name);
+              pnl_set_weak_pointer (&priv->action_group, group);
+              priv->action_state_changed_handler =
+                g_signal_connect_object (priv->action_group,
+                                         detailed,
+                                         G_CALLBACK (pnl_tab_action_state_changed),
+                                         self,
+                                         G_CONNECT_SWAPPED);
+
+              g_free (detailed);
+            }
+
+          g_free (prefix);
+          g_free (name);
+        }
+    }
+}
+
+static void
+pnl_tab_hierarchy_changed (GtkWidget *widget,
+                           GtkWidget *old_toplevel)
+{
+  PnlTab *self = (PnlTab *)widget;
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+  GActionGroup *group;
+
+  g_assert (GTK_IS_WIDGET (widget));
+  g_assert (!old_toplevel || GTK_IS_WIDGET (old_toplevel));
+
+  group = pnl_gtk_widget_find_group_for_action (widget, priv->action_name);
+  pnl_tab_monitor_action_group (self, group);
+}
+
+static void
 pnl_tab_size_allocate (GtkWidget     *widget,
                        GtkAllocation *allocation)
 {
@@ -417,6 +543,7 @@ pnl_tab_class_init (PnlTabClass *klass)
   widget_class->leave_notify_event = pnl_tab_leave_notify_event;
   widget_class->realize = pnl_tab_realize;
   widget_class->size_allocate = pnl_tab_size_allocate;
+  widget_class->hierarchy_changed = pnl_tab_hierarchy_changed;
 
   gtk_widget_class_set_css_name (widget_class, "tab");
 
@@ -654,14 +781,8 @@ pnl_tab_set_active (PnlTab   *self,
   if (priv->active != active)
     {
       priv->active = active;
-
-      if (priv->active)
-        gtk_widget_set_state_flags (GTK_WIDGET (self), GTK_STATE_FLAG_CHECKED, FALSE);
-      else
-        gtk_widget_unset_state_flags (GTK_WIDGET (self), GTK_STATE_FLAG_CHECKED);
-
       pnl_tab_activate (self);
-
+      pnl_tab_apply_state (self);
       g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_ACTIVE]);
     }
 }
