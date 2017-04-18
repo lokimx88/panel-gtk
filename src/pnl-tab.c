@@ -22,32 +22,106 @@
 #include "pnl-tab.h"
 #include "pnl-util-private.h"
 
-struct _PnlTab
-{
-  GtkToggleButton  parent;
-  GtkPositionType  edge : 2;
-  GtkLabel        *title;
-  GtkWidget       *widget;
-};
+struct _PnlTab { GtkEventBox parent; };
 
-G_DEFINE_TYPE (PnlTab, pnl_tab, GTK_TYPE_TOGGLE_BUTTON)
+typedef struct
+{
+  /*
+   * The edge the tab is being displayed upon. We use this to rotate
+   * text or alter box orientation.
+   */
+  GtkPositionType edge : 2;
+
+  /* Can we be closed by the user */
+  guint can_close : 1;
+
+  /* Are we the active tab */
+  guint active : 1;
+
+  /* If we are currently pressed */
+  guint pressed : 1;
+
+  /* If the pointer is over the widget (prelight) */
+  guint pointer_in_widget : 1;
+
+  /* If we are currently activating */
+  guint in_activate : 1;
+
+  /* The action name to change the current tab */
+  gchar *action_name;
+
+  /* The value for the current tab */
+  GVariant *action_target_value;
+
+  /*
+   * These are our control widgets. The box contains the title in the
+   * center with the minimize/close buttons to a side, depending on the
+   * orientation/edge of the tabs.
+   */
+  GtkBox *box;
+  GtkLabel *title;
+  GtkWidget *close;
+  GtkWidget *minimize;
+
+  /*
+   * This is a weak pointer to the widget this tab represents.
+   * It's used by the stack to translate between the tab/widget
+   * as necessary.
+   */
+  GtkWidget *widget;
+} PnlTabPrivate;
+
+static void actionable_iface_init (GtkActionableInterface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (PnlTab, pnl_tab, PNL_TYPE_BIN,
+                         G_ADD_PRIVATE (PnlTab)
+                         G_IMPLEMENT_INTERFACE (GTK_TYPE_ACTIONABLE, actionable_iface_init))
 
 enum {
   PROP_0,
+  PROP_ACTIVE,
+  PROP_CAN_CLOSE,
   PROP_EDGE,
   PROP_TITLE,
   PROP_WIDGET,
-  N_PROPS
+  N_PROPS,
+
+  PROP_ACTION_NAME,
+  PROP_ACTION_TARGET,
+};
+
+enum {
+  CLICKED,
+  N_SIGNALS
 };
 
 static GParamSpec *properties [N_PROPS];
+static guint signals [N_SIGNALS];
+
+static void
+pnl_tab_activate (PnlTab *self)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_assert (PNL_IS_TAB (self));
+
+  if (priv->in_activate || priv->action_name == NULL)
+    return;
+
+  priv->in_activate = TRUE;
+  pnl_gtk_widget_activate_action (GTK_WIDGET (self), priv->action_name, priv->action_target_value);
+  priv->in_activate = FALSE;
+}
 
 static void
 pnl_tab_destroy (GtkWidget *widget)
 {
   PnlTab *self = (PnlTab *)widget;
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
 
-  pnl_clear_weak_pointer (&self->widget);
+  pnl_clear_weak_pointer (&priv->widget);
+  g_clear_pointer (&priv->action_name, g_free);
+  g_clear_pointer (&priv->action_target_value, g_variant_unref);
 
   GTK_WIDGET_CLASS (pnl_tab_parent_class)->destroy (widget);
 }
@@ -55,30 +129,44 @@ pnl_tab_destroy (GtkWidget *widget)
 static void
 pnl_tab_update_edge (PnlTab *self)
 {
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
   g_assert (PNL_IS_TAB (self));
 
-  switch (self->edge)
+  switch (priv->edge)
     {
     case GTK_POS_TOP:
-      gtk_label_set_angle (self->title, 0.0);
+      gtk_label_set_angle (priv->title, 0.0);
+      gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->box), GTK_ORIENTATION_HORIZONTAL);
+      gtk_box_set_child_packing (priv->box, GTK_WIDGET (priv->close), FALSE, FALSE, 0, GTK_PACK_END);
+      gtk_box_set_child_packing (priv->box, GTK_WIDGET (priv->minimize), FALSE, FALSE, 0, GTK_PACK_END);
       gtk_widget_set_hexpand (GTK_WIDGET (self), TRUE);
       gtk_widget_set_vexpand (GTK_WIDGET (self), FALSE);
       break;
 
     case GTK_POS_BOTTOM:
-      gtk_label_set_angle (self->title, 0.0);
+      gtk_label_set_angle (priv->title, 0.0);
+      gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->box), GTK_ORIENTATION_HORIZONTAL);
+      gtk_box_set_child_packing (priv->box, GTK_WIDGET (priv->close), FALSE, FALSE, 0, GTK_PACK_END);
+      gtk_box_set_child_packing (priv->box, GTK_WIDGET (priv->minimize), FALSE, FALSE, 0, GTK_PACK_END);
       gtk_widget_set_hexpand (GTK_WIDGET (self), TRUE);
       gtk_widget_set_vexpand (GTK_WIDGET (self), FALSE);
       break;
 
     case GTK_POS_LEFT:
-      gtk_label_set_angle (self->title, -90.0);
+      gtk_label_set_angle (priv->title, -90.0);
+      gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->box), GTK_ORIENTATION_VERTICAL);
+      gtk_box_set_child_packing (priv->box, GTK_WIDGET (priv->close), FALSE, FALSE, 0, GTK_PACK_END);
+      gtk_box_set_child_packing (priv->box, GTK_WIDGET (priv->minimize), FALSE, FALSE, 0, GTK_PACK_END);
       gtk_widget_set_hexpand (GTK_WIDGET (self), FALSE);
       gtk_widget_set_vexpand (GTK_WIDGET (self), TRUE);
       break;
 
     case GTK_POS_RIGHT:
-      gtk_label_set_angle (self->title, 90.0);
+      gtk_label_set_angle (priv->title, 90.0);
+      gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->box), GTK_ORIENTATION_VERTICAL);
+      gtk_box_set_child_packing (priv->box, GTK_WIDGET (priv->close), FALSE, FALSE, 0, GTK_PACK_START);
+      gtk_box_set_child_packing (priv->box, GTK_WIDGET (priv->minimize), FALSE, FALSE, 0, GTK_PACK_START);
       gtk_widget_set_hexpand (GTK_WIDGET (self), FALSE);
       gtk_widget_set_vexpand (GTK_WIDGET (self), TRUE);
       break;
@@ -88,6 +176,139 @@ pnl_tab_update_edge (PnlTab *self)
     }
 }
 
+static gboolean
+pnl_tab_enter_notify_event (GtkWidget        *widget,
+                            GdkEventCrossing *event)
+{
+  PnlTab *self = (PnlTab *)widget;
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_TAB (self), FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  priv->pointer_in_widget = TRUE;
+  gtk_widget_set_state_flags (widget, GTK_STATE_FLAG_PRELIGHT, FALSE);
+
+  return GDK_EVENT_PROPAGATE;
+}
+
+static gboolean
+pnl_tab_leave_notify_event (GtkWidget        *widget,
+                            GdkEventCrossing *event)
+{
+  PnlTab *self = (PnlTab *)widget;
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_TAB (self), FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  priv->pointer_in_widget = FALSE;
+  gtk_widget_unset_state_flags (widget, GTK_STATE_FLAG_PRELIGHT);
+
+  return GDK_EVENT_PROPAGATE;
+}
+
+static gboolean
+pnl_tab_button_press_event (GtkWidget      *widget,
+                            GdkEventButton *event)
+{
+  PnlTab *self = (PnlTab *)widget;
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_TAB (self), FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  if (event->button == GDK_BUTTON_PRIMARY)
+    {
+      priv->pressed = TRUE;
+      gtk_widget_set_state_flags (widget, GTK_STATE_FLAG_ACTIVE, FALSE);
+      gtk_widget_grab_focus (GTK_WIDGET (self));
+      return GDK_EVENT_STOP;
+    }
+
+  return GDK_EVENT_PROPAGATE;
+}
+
+static gboolean
+pnl_tab_button_release_event (GtkWidget      *widget,
+                              GdkEventButton *event)
+{
+  PnlTab *self = (PnlTab *)widget;
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_TAB (self), FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  if (event->button == GDK_BUTTON_PRIMARY)
+    {
+      priv->pressed = FALSE;
+      gtk_widget_unset_state_flags (widget, GTK_STATE_FLAG_ACTIVE);
+
+      if (priv->pointer_in_widget)
+        g_signal_emit (self, signals [CLICKED], 0);
+
+      return GDK_EVENT_STOP;
+    }
+
+  return GDK_EVENT_PROPAGATE;
+}
+
+static void
+pnl_tab_realize (GtkWidget *widget)
+{
+  PnlTab *self = (PnlTab *)widget;
+  GdkWindowAttr attributes = { 0 };
+  GdkWindow *parent;
+  GdkWindow *window;
+  GtkAllocation alloc;
+  gint attributes_mask = 0;
+
+  g_assert (PNL_IS_TAB (widget));
+
+  gtk_widget_get_allocation (GTK_WIDGET (self), &alloc);
+
+  gtk_widget_set_realized (GTK_WIDGET (self), TRUE);
+
+  parent = gtk_widget_get_parent_window (GTK_WIDGET (self));
+
+  attributes.window_type = GDK_WINDOW_CHILD;
+  attributes.wclass = GDK_INPUT_OUTPUT;
+  attributes.x = alloc.x;
+  attributes.y = alloc.y;
+  attributes.width = alloc.width;
+  attributes.height = alloc.height;
+  attributes.visual = gtk_widget_get_visual (widget);
+  attributes.event_mask = gtk_widget_get_events (widget);
+  attributes.event_mask |= (GDK_BUTTON_PRESS_MASK |
+                            GDK_BUTTON_RELEASE_MASK |
+                            GDK_TOUCH_MASK |
+                            GDK_EXPOSURE_MASK |
+                            GDK_ENTER_NOTIFY_MASK |
+                            GDK_LEAVE_NOTIFY_MASK);
+
+  attributes_mask = (GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL);
+
+  window = gdk_window_new (parent, &attributes, attributes_mask);
+  gtk_widget_register_window (GTK_WIDGET (self), window);
+  gtk_widget_set_window (GTK_WIDGET (self), window);
+}
+
+static void
+pnl_tab_size_allocate (GtkWidget     *widget,
+                       GtkAllocation *allocation)
+{
+  g_assert (PNL_IS_TAB (widget));
+
+  GTK_WIDGET_CLASS (pnl_tab_parent_class)->size_allocate (widget, allocation);
+
+  if (gtk_widget_get_realized (widget))
+    gdk_window_move_resize (gtk_widget_get_window (widget),
+                            allocation->x,
+                            allocation->y,
+                            allocation->width,
+                            allocation->height);
+}
+
 static void
 pnl_tab_get_property (GObject    *object,
                       guint       prop_id,
@@ -95,9 +316,26 @@ pnl_tab_get_property (GObject    *object,
                       GParamSpec *pspec)
 {
   PnlTab *self = PNL_TAB (object);
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
 
   switch (prop_id)
     {
+    case PROP_ACTIVE:
+      g_value_set_boolean (value, pnl_tab_get_active (self));
+      break;
+
+    case PROP_ACTION_NAME:
+      g_value_set_string (value, priv->action_name);
+      break;
+
+    case PROP_ACTION_TARGET:
+      g_value_set_boxed (value, priv->action_target_value);
+      break;
+
+    case PROP_CAN_CLOSE:
+      g_value_set_boolean (value, pnl_tab_get_can_close (self));
+      break;
+
     case PROP_EDGE:
       g_value_set_enum (value, pnl_tab_get_edge (self));
       break;
@@ -122,9 +360,30 @@ pnl_tab_set_property (GObject      *object,
                       GParamSpec   *pspec)
 {
   PnlTab *self = PNL_TAB (object);
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
 
   switch (prop_id)
     {
+    case PROP_ACTIVE:
+      pnl_tab_set_active (self, g_value_get_boolean (value));
+      break;
+
+    case PROP_ACTION_NAME:
+      g_free (priv->action_name);
+      priv->action_name = g_value_dup_string (value);
+      break;
+
+    case PROP_ACTION_TARGET:
+      g_clear_pointer (&priv->action_target_value, g_variant_unref);
+      priv->action_target_value = g_value_get_variant (value);
+      if (priv->action_target_value != NULL)
+        g_variant_ref_sink (priv->action_target_value);
+      break;
+
+    case PROP_CAN_CLOSE:
+      pnl_tab_set_can_close (self, g_value_get_boolean (value));
+      break;
+
     case PROP_EDGE:
       pnl_tab_set_edge (self, g_value_get_enum (value));
       break;
@@ -152,8 +411,31 @@ pnl_tab_class_init (PnlTabClass *klass)
   object_class->set_property = pnl_tab_set_property;
 
   widget_class->destroy = pnl_tab_destroy;
+  widget_class->button_press_event = pnl_tab_button_press_event;
+  widget_class->button_release_event = pnl_tab_button_release_event;
+  widget_class->enter_notify_event = pnl_tab_enter_notify_event;
+  widget_class->leave_notify_event = pnl_tab_leave_notify_event;
+  widget_class->realize = pnl_tab_realize;
+  widget_class->size_allocate = pnl_tab_size_allocate;
 
-  gtk_widget_class_set_css_name (widget_class, "docktab");
+  gtk_widget_class_set_css_name (widget_class, "tab");
+
+  g_object_class_override_property (object_class, PROP_ACTION_NAME, "action-name");
+  g_object_class_override_property (object_class, PROP_ACTION_TARGET, "action-target");
+
+  properties [PROP_ACTIVE] =
+    g_param_spec_boolean ("active",
+                          "Active",
+                          "If the tab is currently active",
+                          FALSE,
+                          (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
+  properties [PROP_CAN_CLOSE] =
+    g_param_spec_boolean ("can-close",
+                          "Can Close",
+                          "If the tab widget can be closed",
+                          FALSE,
+                          (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
 
   properties [PROP_EDGE] =
     g_param_spec_enum ("edge",
@@ -178,61 +460,115 @@ pnl_tab_class_init (PnlTabClass *klass)
                          (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_properties (object_class, N_PROPS, properties);
+
+  signals [CLICKED] =
+    g_signal_new_class_handler ("clicked",
+                                G_TYPE_FROM_CLASS (klass),
+                                G_SIGNAL_RUN_LAST,
+                                G_CALLBACK (pnl_tab_activate),
+                                NULL, NULL, NULL, G_TYPE_NONE, 0);
 }
 
 static void
 pnl_tab_init (PnlTab *self)
 {
-  self->edge = GTK_POS_TOP;
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
 
+  priv->edge = GTK_POS_TOP;
+
+  gtk_widget_set_has_window (GTK_WIDGET (self), TRUE);
+
+  gtk_widget_add_events (GTK_WIDGET (self),
+                         GDK_BUTTON_PRESS_MASK |
+                         GDK_BUTTON_RELEASE_MASK |
+                         GDK_ENTER_NOTIFY_MASK|
+                         GDK_LEAVE_NOTIFY_MASK);
   gtk_widget_set_hexpand (GTK_WIDGET (self), TRUE);
   gtk_widget_set_vexpand (GTK_WIDGET (self), FALSE);
 
-  self->title = g_object_new (GTK_TYPE_LABEL,
+  priv->box = g_object_new (GTK_TYPE_BOX,
+                            "orientation", GTK_ORIENTATION_HORIZONTAL,
+                            "visible", TRUE,
+                            NULL);
+  g_signal_connect (priv->box, "destroy", G_CALLBACK (gtk_widget_destroyed), &priv->box);
+  gtk_container_add (GTK_CONTAINER (self), GTK_WIDGET (priv->box));
+
+  priv->title = g_object_new (GTK_TYPE_LABEL,
                               "ellipsize", PANGO_ELLIPSIZE_END,
                               "use-underline", TRUE,
                               "visible", TRUE,
                               NULL);
+  g_signal_connect (priv->title, "destroy", G_CALLBACK (gtk_widget_destroyed), &priv->title);
+  gtk_box_set_center_widget (priv->box, GTK_WIDGET (priv->title));
 
-  gtk_container_add (GTK_CONTAINER (self), GTK_WIDGET (self->title));
+  priv->close = g_object_new (GTK_TYPE_BUTTON,
+                              "halign", GTK_ALIGN_END,
+                              "child", g_object_new (GTK_TYPE_IMAGE,
+                                                     "icon-name", "window-close-symbolic",
+                                                     "visible", TRUE,
+                                                     NULL),
+                              "visible", TRUE,
+                              NULL);
+  gtk_style_context_add_class (gtk_widget_get_style_context (GTK_WIDGET (priv->close)), "close");
+  gtk_box_pack_end (priv->box, GTK_WIDGET (priv->close), FALSE, FALSE, 0);
+  g_object_bind_property (self, "can-close", priv->close, "visible", G_BINDING_SYNC_CREATE);
+
+  priv->minimize = g_object_new (GTK_TYPE_BUTTON,
+                                 "halign", GTK_ALIGN_END,
+                                 "child", g_object_new (GTK_TYPE_IMAGE,
+                                                        "icon-name", "window-minimize-symbolic",
+                                                        "visible", TRUE,
+                                                        NULL),
+                                 "visible", TRUE,
+                                 NULL);
+  gtk_style_context_add_class (gtk_widget_get_style_context (GTK_WIDGET (priv->minimize)), "minimize");
+  gtk_box_pack_end (priv->box, GTK_WIDGET (priv->minimize), FALSE, FALSE, 0);
 }
 
 const gchar *
 pnl_tab_get_title (PnlTab *self)
 {
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
   g_return_val_if_fail (PNL_IS_TAB (self), NULL);
 
-  return gtk_label_get_label (self->title);
+  return gtk_label_get_label (priv->title);
 }
 
 void
 pnl_tab_set_title (PnlTab      *self,
                    const gchar *title)
 {
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
   g_return_if_fail (PNL_IS_TAB (self));
 
-  gtk_label_set_label (self->title, title);
+  gtk_label_set_label (priv->title, title);
 }
 
 GtkPositionType
 pnl_tab_get_edge (PnlTab *self)
 {
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
   g_return_val_if_fail (PNL_IS_TAB (self), 0);
 
-  return self->edge;
+  return priv->edge;
 }
 
 void
 pnl_tab_set_edge (PnlTab          *self,
                   GtkPositionType  edge)
 {
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
   g_return_if_fail (PNL_IS_TAB (self));
   g_return_if_fail (edge >= 0);
   g_return_if_fail (edge <= 3);
 
-  if (self->edge != edge)
+  if (priv->edge != edge)
     {
-      self->edge = edge;
+      priv->edge = edge;
       pnl_tab_update_edge (self);
       g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_EDGE]);
     }
@@ -246,20 +582,152 @@ pnl_tab_set_edge (PnlTab          *self,
 GtkWidget *
 pnl_tab_get_widget (PnlTab *self)
 {
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
   g_return_val_if_fail (PNL_IS_TAB (self), NULL);
 
-  return self->widget;
+  return priv->widget;
 }
 
 void
 pnl_tab_set_widget (PnlTab    *self,
                     GtkWidget *widget)
 {
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
   g_return_if_fail (PNL_IS_TAB (self));
 
-  if (pnl_set_weak_pointer (&self->widget, widget))
+  if (pnl_set_weak_pointer (&priv->widget, widget))
     {
-      gtk_label_set_mnemonic_widget (self->title, widget);
+      gtk_label_set_mnemonic_widget (priv->title, widget);
       g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_WIDGET]);
     }
+}
+
+gboolean
+pnl_tab_get_can_close (PnlTab *self)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_TAB (self), FALSE);
+
+  return priv->can_close;
+}
+
+void
+pnl_tab_set_can_close (PnlTab   *self,
+                       gboolean  can_close)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_if_fail (PNL_IS_TAB (self));
+
+  can_close = !!can_close;
+
+  if (can_close != priv->can_close)
+    {
+      priv->can_close = can_close;
+      g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_CAN_CLOSE]);
+    }
+}
+
+gboolean
+pnl_tab_get_active (PnlTab *self)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_TAB (self), FALSE);
+
+  return priv->active;
+}
+
+void
+pnl_tab_set_active (PnlTab   *self,
+                    gboolean  active)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_if_fail (PNL_IS_TAB (self));
+
+  active = !!active;
+
+  if (priv->active != active)
+    {
+      priv->active = active;
+
+      if (priv->active)
+        gtk_widget_set_state_flags (GTK_WIDGET (self), GTK_STATE_FLAG_CHECKED, FALSE);
+      else
+        gtk_widget_unset_state_flags (GTK_WIDGET (self), GTK_STATE_FLAG_CHECKED);
+
+      pnl_tab_activate (self);
+
+      g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_ACTIVE]);
+    }
+}
+
+static const gchar *
+pnl_tab_get_action_name (GtkActionable *actionable)
+{
+  PnlTab *self = (PnlTab *)actionable;
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_TAB (self), NULL);
+
+  return priv->action_name;
+}
+
+static void
+pnl_tab_set_action_name (GtkActionable *actionable,
+                         const gchar   *action_name)
+{
+  PnlTab *self = (PnlTab *)actionable;
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_if_fail (PNL_IS_TAB (self));
+
+  if (g_strcmp0 (priv->action_name, action_name) != 0)
+    {
+      g_free (priv->action_name);
+      priv->action_name = g_strdup (action_name);
+      g_object_notify (G_OBJECT (self), "action-name");
+    }
+}
+
+static GVariant *
+pnl_tab_get_action_target_value (GtkActionable *actionable)
+{
+  PnlTab *self = (PnlTab *)actionable;
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_TAB (self), NULL);
+
+  return priv->action_target_value;
+}
+
+static void
+pnl_tab_set_action_target_value (GtkActionable *actionable,
+                                 GVariant      *variant)
+{
+  PnlTab *self = (PnlTab *)actionable;
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_if_fail (PNL_IS_TAB (self));
+
+  if (priv->action_target_value != variant)
+    {
+      g_clear_pointer (&priv->action_target_value, g_variant_unref);
+      if (variant)
+        priv->action_target_value = g_variant_ref (variant);
+      g_object_notify (G_OBJECT (self), "action-target");
+    }
+}
+
+static void
+actionable_iface_init (GtkActionableInterface *iface)
+{
+  iface->get_action_name = pnl_tab_get_action_name;
+  iface->set_action_name = pnl_tab_set_action_name;
+  iface->get_action_target_value = pnl_tab_get_action_target_value;
+  iface->set_action_target_value = pnl_tab_set_action_target_value;
 }

@@ -26,21 +26,29 @@
 
 #include <gtk/gtk.h>
 
+#include "pnl-bin.h"
+
 G_BEGIN_DECLS
 
 #define PNL_TYPE_TAB (pnl_tab_get_type())
 
-G_DECLARE_FINAL_TYPE (PnlTab, pnl_tab, PNL, TAB, GtkToggleButton)
+G_DECLARE_FINAL_TYPE (PnlTab, pnl_tab, PNL, TAB, PnlBin)
 
-const gchar     *pnl_tab_get_title  (PnlTab          *self);
-void             pnl_tab_set_title  (PnlTab          *self,
-                                     const gchar     *title);
-GtkPositionType  pnl_tab_get_edge   (PnlTab          *self);
-void             pnl_tab_set_edge   (PnlTab          *self,
-                                     GtkPositionType  edge);
-GtkWidget       *pnl_tab_get_widget (PnlTab          *self);
-void             pnl_tab_set_widget (PnlTab          *self,
-                                     GtkWidget       *widget);
+const gchar     *pnl_tab_get_title     (PnlTab          *self);
+void             pnl_tab_set_title     (PnlTab          *self,
+                                        const gchar     *title);
+GtkPositionType  pnl_tab_get_edge      (PnlTab          *self);
+void             pnl_tab_set_edge      (PnlTab          *self,
+                                        GtkPositionType  edge);
+GtkWidget       *pnl_tab_get_widget    (PnlTab          *self);
+void             pnl_tab_set_widget    (PnlTab          *self,
+                                        GtkWidget       *widget);
+gboolean         pnl_tab_get_active    (PnlTab          *self);
+void             pnl_tab_set_active    (PnlTab          *self,
+                                        gboolean         active);
+gboolean         pnl_tab_get_can_close (PnlTab          *self);
+void             pnl_tab_set_can_close (PnlTab          *self,
+                                        gboolean         can_close);
 
 G_END_DECLS
 
