@@ -303,7 +303,7 @@ pnl_tab_strip_child_title_changed (PnlTabStrip *self,
                                    GParamSpec  *pspec,
                                    GtkWidget   *child)
 {
-  g_autofree gchar *title = NULL;
+  gchar *title = NULL;
   GtkWidget *parent;
   PnlTab *tab;
 
@@ -324,6 +324,8 @@ pnl_tab_strip_child_title_changed (PnlTabStrip *self,
                            NULL);
 
   pnl_tab_set_title (tab, title);
+
+  g_free (title);
 }
 
 static void
