@@ -112,6 +112,33 @@ pnl_gtk_bin_size_allocate (GtkWidget     *widget,
   gtk_widget_size_allocate (child, allocation);
 }
 
+static void
+split_action_name (const gchar  *action_name,
+                   gchar       **prefix,
+                   gchar       **name)
+{
+  const gchar *dot;
+
+  g_assert (prefix != NULL);
+  g_assert (name != NULL);
+
+  *prefix = NULL;
+  *name = NULL;
+
+  if (action_name == NULL)
+    return;
+
+  dot = strchr (action_name, '.');
+
+  if (dot == NULL)
+    *name = g_strdup (action_name);
+  else
+    {
+      *prefix = g_strndup (action_name, dot - action_name);
+      *name = g_strdup (dot + 1);
+    }
+}
+
 gboolean
 pnl_gtk_widget_activate_action (GtkWidget   *widget,
                                 const gchar *full_action_name,
@@ -198,4 +225,97 @@ cleanup:
   g_free (action_name);
 
   return ret;
+}
+
+static GActionGroup *
+find_group_with_action (GtkWidget   *widget,
+                        const gchar *prefix,
+                        const gchar *name)
+{
+  GActionGroup *group;
+
+  g_assert (GTK_IS_WIDGET (widget));
+  g_assert (name != NULL);
+
+  /*
+   * GtkWidget does not provide a way to get group names,
+   * so there is nothing more we can do if prefix is NULL.
+   */
+  if (prefix == NULL)
+    return NULL;
+
+  if (g_str_equal (prefix, "app"))
+    group = G_ACTION_GROUP (g_application_get_default ());
+  else
+    group = gtk_widget_get_action_group (widget, prefix);
+
+  if (group != NULL && g_action_group_has_action (group, name))
+    return group;
+
+  widget = gtk_widget_get_parent (widget);
+
+  if (widget != NULL)
+    return find_group_with_action (widget, prefix, name);
+
+  return NULL;
+}
+
+GVariant *
+pnl_gtk_widget_get_action_state (GtkWidget   *widget,
+                                 const gchar *action_name)
+{
+  GActionGroup *group;
+  gchar *prefix = NULL;
+  gchar *name = NULL;
+  GVariant *ret = NULL;
+
+  split_action_name (action_name, &prefix, &name);
+  if (name == NULL || prefix == NULL)
+    goto cleanup;
+
+  group = find_group_with_action (widget, prefix, name);
+  if (group == NULL)
+    goto cleanup;
+
+  ret = g_action_group_get_action_state (group, name);
+
+cleanup:
+  g_free (name);
+  g_free (prefix);
+
+  return ret;
+}
+
+GActionGroup *
+pnl_gtk_widget_find_group_for_action (GtkWidget   *widget,
+                                      const gchar *action_name)
+{
+  GActionGroup *group;
+  gchar *prefix = NULL;
+  gchar *name = NULL;
+
+  g_return_val_if_fail (GTK_IS_WIDGET (widget), NULL);
+
+  if (action_name == NULL)
+    return NULL;
+
+  split_action_name (action_name, &prefix, &name);
+  if (name == NULL || prefix == NULL)
+    goto cleanup;
+
+  group = find_group_with_action (widget, prefix, name);
+
+cleanup:
+  g_free (name);
+  g_free (prefix);
+
+  return group;
+}
+
+void
+pnl_g_action_name_parse (const gchar  *action_name,
+                         gchar       **prefix,
+                         gchar       **name)
+{
+  split_action_name (action_name, prefix, name);
 }
