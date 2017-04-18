@@ -122,6 +122,12 @@ pnl_bin_size_allocate (GtkWidget     *widget,
 
       child_alloc = *alloc;
 
+      if (gtk_widget_get_has_window (widget))
+        {
+          child_alloc.x = 0;
+          child_alloc.y = 0;
+        }
+
       child_alloc.x += all_borders.left;
       child_alloc.y += all_borders.top;
       child_alloc.width -= all_borders.left;
