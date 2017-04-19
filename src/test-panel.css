@@ -104,3 +104,15 @@ dockoverlayedge.bottom tabstrip tab:checked {
 textview {
   padding: 12px;
 }
+
+
+dockbar button {
+ border: none;
+ background: transparent;
+ box-shadow: none;
+ margin: 12px 3px 0 3px;
+ padding: 0px;
+ font-weight: bold;
+ font-size: 0.8em;
+ outline-offset: 1px;
+}
