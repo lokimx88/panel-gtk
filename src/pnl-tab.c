@@ -575,6 +575,7 @@ pnl_tab_minimize_clicked (PnlTab    *self,
                           GtkWidget *button)
 {
   PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+  GtkPositionType position = GTK_POS_LEFT;
 
   g_assert (PNL_IS_TAB (self));
   g_assert (GTK_IS_BUTTON (button));
@@ -589,7 +590,7 @@ pnl_tab_minimize_clicked (PnlTab    *self,
            parent != NULL;
            parent = pnl_dock_item_get_parent (parent))
         {
-          if (pnl_dock_item_minimize (parent, item))
+          if (pnl_dock_item_minimize (parent, item, &position))
             break;
         }
     }

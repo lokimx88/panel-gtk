@@ -27,48 +27,50 @@ struct _PnlDockItemInterface
 {
   GTypeInterface parent;
 
-  void            (*set_manager)        (PnlDockItem    *self,
-                                         PnlDockManager *manager);
-  PnlDockManager *(*get_manager)        (PnlDockItem    *self);
-  void            (*manager_set)        (PnlDockItem    *self,
-                                         PnlDockManager *old_manager);
-  void            (*present_child)      (PnlDockItem    *self,
-                                         PnlDockItem    *child);
-  void            (*update_visibility)  (PnlDockItem    *self);
-  gboolean        (*get_child_visible)  (PnlDockItem    *self,
-                                         PnlDockItem    *child);
-  void            (*set_child_visible)  (PnlDockItem    *self,
-                                         PnlDockItem    *child,
-                                         gboolean        child_visible);
-  gchar          *(*get_title)          (PnlDockItem    *self);
-  gboolean        (*get_can_close)      (PnlDockItem    *self);
-  gboolean        (*close)              (PnlDockItem    *self);
-  gboolean        (*minimize)           (PnlDockItem    *self,
-                                         PnlDockItem    *child);
+  void            (*set_manager)        (PnlDockItem     *self,
+                                         PnlDockManager  *manager);
+  PnlDockManager *(*get_manager)        (PnlDockItem     *self);
+  void            (*manager_set)        (PnlDockItem     *self,
+                                         PnlDockManager  *old_manager);
+  void            (*present_child)      (PnlDockItem     *self,
+                                         PnlDockItem     *child);
+  void            (*update_visibility)  (PnlDockItem     *self);
+  gboolean        (*get_child_visible)  (PnlDockItem     *self,
+                                         PnlDockItem     *child);
+  void            (*set_child_visible)  (PnlDockItem     *self,
+                                         PnlDockItem     *child,
+                                         gboolean         child_visible);
+  gchar          *(*get_title)          (PnlDockItem     *self);
+  gboolean        (*get_can_close)      (PnlDockItem     *self);
+  gboolean        (*close)              (PnlDockItem     *self);
+  gboolean        (*minimize)           (PnlDockItem     *self,
+                                         PnlDockItem     *child,
+                                         GtkPositionType *position);
 };
 
-PnlDockManager *pnl_dock_item_get_manager       (PnlDockItem    *self);
-void            pnl_dock_item_set_manager       (PnlDockItem    *self,
-                                                 PnlDockManager *manager);
-gboolean        pnl_dock_item_adopt             (PnlDockItem    *self,
-                                                 PnlDockItem    *child);
-void            pnl_dock_item_present           (PnlDockItem    *self);
-void            pnl_dock_item_present_child     (PnlDockItem    *self,
-                                                 PnlDockItem    *child);
-void            pnl_dock_item_update_visibility (PnlDockItem    *self);
-gboolean        pnl_dock_item_has_widgets       (PnlDockItem    *self);
-gboolean        pnl_dock_item_get_child_visible (PnlDockItem    *self,
-                                                 PnlDockItem    *child);
-void            pnl_dock_item_set_child_visible (PnlDockItem    *self,
-                                                 PnlDockItem    *child,
-                                                 gboolean        child_visible);
-PnlDockItem    *pnl_dock_item_get_parent        (PnlDockItem    *self);
-gchar          *pnl_dock_item_get_title         (PnlDockItem    *self);
-gboolean        pnl_dock_item_get_can_close     (PnlDockItem    *self);
-gboolean        pnl_dock_item_close             (PnlDockItem    *self);
-gboolean        pnl_dock_item_minimize          (PnlDockItem    *self,
-                                                 PnlDockItem    *child);
-void            _pnl_dock_item_printf           (PnlDockItem    *self);
+PnlDockManager *pnl_dock_item_get_manager       (PnlDockItem     *self);
+void            pnl_dock_item_set_manager       (PnlDockItem     *self,
+                                                 PnlDockManager  *manager);
+gboolean        pnl_dock_item_adopt             (PnlDockItem     *self,
+                                                 PnlDockItem     *child);
+void            pnl_dock_item_present           (PnlDockItem     *self);
+void            pnl_dock_item_present_child     (PnlDockItem     *self,
+                                                 PnlDockItem     *child);
+void            pnl_dock_item_update_visibility (PnlDockItem     *self);
+gboolean        pnl_dock_item_has_widgets       (PnlDockItem     *self);
+gboolean        pnl_dock_item_get_child_visible (PnlDockItem     *self,
+                                                 PnlDockItem     *child);
+void            pnl_dock_item_set_child_visible (PnlDockItem     *self,
+                                                 PnlDockItem     *child,
+                                                 gboolean         child_visible);
+PnlDockItem    *pnl_dock_item_get_parent        (PnlDockItem     *self);
+gchar          *pnl_dock_item_get_title         (PnlDockItem     *self);
+gboolean        pnl_dock_item_get_can_close     (PnlDockItem     *self);
+gboolean        pnl_dock_item_close             (PnlDockItem     *self);
+gboolean        pnl_dock_item_minimize          (PnlDockItem     *self,
+                                                 PnlDockItem     *child,
+                                                 GtkPositionType *position);
+void            _pnl_dock_item_printf           (PnlDockItem     *self);
 
 G_END_DECLS
 

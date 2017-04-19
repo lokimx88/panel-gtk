@@ -1917,10 +1917,58 @@ pnl_dock_bin_set_child_visible (PnlDockItem *item,
     pnl_dock_revealer_set_reveal_child (PNL_DOCK_REVEALER (ancestor), child_visible);
 }
 
+static gboolean
+pnl_dock_bin_minimize (PnlDockItem     *item,
+                       PnlDockItem     *child,
+                       GtkPositionType *position)
+{
+  PnlDockBin *self = (PnlDockBin *)item;
+  PnlDockBinPrivate *priv = pnl_dock_bin_get_instance_private (self);
+
+  g_assert (PNL_IS_DOCK_BIN (self));
+  g_assert (PNL_IS_DOCK_ITEM (child));
+  g_assert (position != NULL);
+
+  for (guint i = 0; i < LAST_PNL_DOCK_BIN_CHILD; i++)
+    {
+      const PnlDockBinChild *info = &priv->children [i];
+
+      if (info->widget != NULL && gtk_widget_is_ancestor (GTK_WIDGET (child), info->widget))
+        {
+          switch (info->type)
+            {
+            case PNL_DOCK_BIN_CHILD_LEFT:
+            case PNL_DOCK_BIN_CHILD_CENTER:
+            case LAST_PNL_DOCK_BIN_CHILD:
+            default:
+              *position = GTK_POS_LEFT;
+              break;
+
+            case PNL_DOCK_BIN_CHILD_RIGHT:
+              *position = GTK_POS_RIGHT;
+              break;
+
+            case PNL_DOCK_BIN_CHILD_TOP:
+              *position = GTK_POS_TOP;
+              break;
+
+            case PNL_DOCK_BIN_CHILD_BOTTOM:
+              *position = GTK_POS_BOTTOM;
+              break;
+            }
+
+          break;
+        }
+    }
+
+  return FALSE;
+}
+
 static void
 pnl_dock_bin_init_dock_item_iface (PnlDockItemInterface *iface)
 {
   iface->present_child = pnl_dock_bin_present_child;
   iface->get_child_visible = pnl_dock_bin_get_child_visible;
   iface->set_child_visible = pnl_dock_bin_set_child_visible;
+  iface->minimize = pnl_dock_bin_minimize;
 }

@@ -166,8 +166,9 @@ pnl_dock_edges_init (PnlDockEdges *self)
 }
 
 static gboolean
-pnl_dock_edges_minimize (PnlDockItem *item,
-                         PnlDockItem *child)
+pnl_dock_edges_minimize (PnlDockItem     *item,
+                         PnlDockItem     *child,
+                         GtkPositionType *position)
 {
   PnlDockEdges *self = (PnlDockEdges *)item;
   PnlDockEdgesPrivate *priv = pnl_dock_edges_get_instance_private (self);
@@ -176,6 +177,7 @@ pnl_dock_edges_minimize (PnlDockItem *item,
 
   g_assert (PNL_IS_DOCK_EDGES (self));
   g_assert (PNL_IS_DOCK_ITEM (child));
+  g_assert (position != NULL);
 
   title = pnl_dock_item_get_title (child);
 
@@ -189,7 +191,27 @@ pnl_dock_edges_minimize (PnlDockItem *item,
                          "visible", TRUE,
                          NULL);
 
-  gtk_container_add (GTK_CONTAINER (priv->left), button);
+  switch (*position)
+    {
+    case GTK_POS_LEFT:
+      gtk_container_add (GTK_CONTAINER (priv->left), button);
+      break;
+
+    case GTK_POS_RIGHT:
+      gtk_container_add (GTK_CONTAINER (priv->right), button);
+      break;
+
+    case GTK_POS_TOP:
+      gtk_container_add (GTK_CONTAINER (priv->top), button);
+      break;
+
+    case GTK_POS_BOTTOM:
+      gtk_container_add (GTK_CONTAINER (priv->bottom), button);
+      break;
+
+    default:
+      g_assert_not_reached ();
+    }
 
   g_free (title);
 

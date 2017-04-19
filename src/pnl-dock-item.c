@@ -501,16 +501,37 @@ pnl_dock_item_close (PnlDockItem *self)
   return FALSE;
 }
 
+/**
+ * pnl_dock_item_minimize:
+ * @self: a #PnlDockItem
+ * @child: A #PnlDockItem that is a child of @self
+ * @position: (inout): A location for a #GtkPositionType
+ *
+ * This requests that @self minimize @child if it knows how.
+ *
+ * If not, it should suggest the gravity for @child if it knows how to
+ * determine that. For example, a #PnlDockBin might know if the widget was part
+ * of the right panel and therefore may set @position to %GTK_POS_RIGHT.
+ *
+ * Returns: %TRUE if @child was minimized. Otherwise %FALSE and @position
+ *   may be updated to a suggested position.
+ */
 gboolean
-pnl_dock_item_minimize (PnlDockItem *self,
-                        PnlDockItem *child)
+pnl_dock_item_minimize (PnlDockItem     *self,
+                        PnlDockItem     *child,
+                        GtkPositionType *position)
 {
+  GtkPositionType unused = GTK_POS_LEFT;
+
   g_return_val_if_fail (PNL_IS_DOCK_ITEM (self), FALSE);
   g_return_val_if_fail (PNL_IS_DOCK_ITEM (child), FALSE);
   g_return_val_if_fail (self != child, FALSE);
 
+  if (position == NULL)
+    position = &unused;
+
   if (PNL_DOCK_ITEM_GET_IFACE (self)->minimize)
-    return PNL_DOCK_ITEM_GET_IFACE (self)->minimize (self, child);
+    return PNL_DOCK_ITEM_GET_IFACE (self)->minimize (self, child, position);
 
   return FALSE;
 }
