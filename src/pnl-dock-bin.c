@@ -22,8 +22,8 @@
 #include "pnl-dock-bin-edge-private.h"
 #include "pnl-dock-item.h"
 
-#define HANDLE_WIDTH  10
-#define HANDLE_HEIGHT 10
+#define HANDLE_WIDTH  3
+#define HANDLE_HEIGHT 3
 
 typedef enum
 {
