@@ -204,6 +204,17 @@ pnl_dock_widget_new (void)
   return g_object_new (PNL_TYPE_DOCK_WIDGET, NULL);
 }
 
+static gchar *
+pnl_dock_widget_item_get_title (PnlDockItem *item)
+{
+  PnlDockWidget *self = (PnlDockWidget *)item;
+  PnlDockWidgetPrivate *priv = pnl_dock_widget_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_DOCK_WIDGET (self), NULL);
+
+  return g_strdup (priv->title);
+}
+
 const gchar *
 pnl_dock_widget_get_title (PnlDockWidget *self)
 {
@@ -234,4 +245,5 @@ static void
 dock_item_iface_init (PnlDockItemInterface *iface)
 {
   iface->get_can_close = pnl_dock_widget_get_can_close;
+  iface->get_title = pnl_dock_widget_item_get_title;
 }

@@ -500,3 +500,14 @@ pnl_dock_item_close (PnlDockItem *self)
 
   return FALSE;
 }
+
+gchar *
+pnl_dock_item_get_title (PnlDockItem *self)
+{
+  g_return_val_if_fail (PNL_IS_DOCK_ITEM (self), NULL);
+
+  if (PNL_DOCK_ITEM_GET_IFACE (self)->get_title)
+    return PNL_DOCK_ITEM_GET_IFACE (self)->get_title (self);
+
+  return NULL;
+}
