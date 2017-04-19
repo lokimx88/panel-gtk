@@ -501,6 +501,20 @@ pnl_dock_item_close (PnlDockItem *self)
   return FALSE;
 }
 
+gboolean
+pnl_dock_item_minimize (PnlDockItem *self,
+                        PnlDockItem *child)
+{
+  g_return_val_if_fail (PNL_IS_DOCK_ITEM (self), FALSE);
+  g_return_val_if_fail (PNL_IS_DOCK_ITEM (child), FALSE);
+  g_return_val_if_fail (self != child, FALSE);
+
+  if (PNL_DOCK_ITEM_GET_IFACE (self)->minimize)
+    return PNL_DOCK_ITEM_GET_IFACE (self)->minimize (self, child);
+
+  return FALSE;
+}
+
 gchar *
 pnl_dock_item_get_title (PnlDockItem *self)
 {

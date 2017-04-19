@@ -43,6 +43,8 @@ struct _PnlDockItemInterface
   gchar          *(*get_title)          (PnlDockItem    *self);
   gboolean        (*get_can_close)      (PnlDockItem    *self);
   gboolean        (*close)              (PnlDockItem    *self);
+  gboolean        (*minimize)           (PnlDockItem    *self,
+                                         PnlDockItem    *child);
 };
 
 PnlDockManager *pnl_dock_item_get_manager       (PnlDockItem    *self);
@@ -64,6 +66,8 @@ PnlDockItem    *pnl_dock_item_get_parent        (PnlDockItem    *self);
 gchar          *pnl_dock_item_get_title         (PnlDockItem    *self);
 gboolean        pnl_dock_item_get_can_close     (PnlDockItem    *self);
 gboolean        pnl_dock_item_close             (PnlDockItem    *self);
+gboolean        pnl_dock_item_minimize          (PnlDockItem    *self,
+                                                 PnlDockItem    *child);
 void            _pnl_dock_item_printf           (PnlDockItem    *self);
 
 G_END_DECLS
