@@ -34,7 +34,7 @@ typedef struct
   gdouble         angle;
 } PositionInfo;
 
-G_DEFINE_TYPE_WITH_CODE (PnlDockBar, pnl_dock_bar, GTK_TYPE_BIN,
+G_DEFINE_TYPE_WITH_CODE (PnlDockBar, pnl_dock_bar, PNL_TYPE_BIN,
                          G_ADD_PRIVATE (PnlDockBar)
                          G_IMPLEMENT_INTERFACE (PNL_TYPE_DOCK_ITEM, NULL))
 
@@ -112,93 +112,18 @@ pnl_dock_bar_update_layout (PnlDockBar *self)
 }
 
 static void
-pnl_dock_bar_get_preferred_width (GtkWidget *widget,
-                                  gint      *min_width,
-                                  gint      *nat_width)
+pnl_dock_bar_add (GtkContainer *container,
+                  GtkWidget    *child)
 {
-  GtkStyleContext *style_context;
-  GtkWidget *child;
-  GtkBorder border;
-  GtkBorder margin;
-  GtkBorder padding;
-  GtkStateFlags state;
-  gint child_min_width = 0;
-  gint child_nat_width = 0;
-  gint style_min_width = 0;
+  PnlDockBar *self = (PnlDockBar *)container;
+  PnlDockBarPrivate *priv = pnl_dock_bar_get_instance_private (self);
 
-  g_assert (GTK_IS_BIN (widget));
-  g_assert (min_width != NULL);
-  g_assert (nat_width != NULL);
+  g_assert (PNL_IS_DOCK_BAR (self));
+  g_assert (GTK_IS_WIDGET (child));
 
-  state = gtk_widget_get_state_flags (widget);
-  style_context = gtk_widget_get_style_context (widget);
+  gtk_container_add (GTK_CONTAINER (priv->box), child);
 
-  gtk_style_context_get (style_context, state,
-                         "min-width", &style_min_width,
-                         NULL);
-
-  gtk_style_context_get_border (style_context, state, &border);
-  gtk_style_context_get_margin (style_context, state, &margin);
-  gtk_style_context_get_padding (style_context, state, &padding);
-
-  child = gtk_bin_get_child (GTK_BIN (widget));
-  if (child != NULL)
-    gtk_widget_get_preferred_width (child, &child_min_width, &child_nat_width);
-
-#define BORDER_WIDTH(b) ((b).right - (b).left)
-
-  *min_width = child_min_width + BORDER_WIDTH (border) + BORDER_WIDTH (margin) + BORDER_WIDTH (padding);
-  *nat_width = child_nat_width + BORDER_WIDTH (border) + BORDER_WIDTH (margin) + BORDER_WIDTH (padding);
-
-  *min_width = MAX (*min_width, style_min_width);
-  *nat_width = MAX (*nat_width, style_min_width);
-
-#undef BORDER_WIDTH
-}
-
-static void
-pnl_dock_bar_get_preferred_height (GtkWidget *widget,
-                                   gint      *min_height,
-                                   gint      *nat_height)
-{
-  GtkStyleContext *style_context;
-  GtkWidget *child;
-  GtkBorder border;
-  GtkBorder margin;
-  GtkBorder padding;
-  GtkStateFlags state;
-  gint child_min_height = 0;
-  gint child_nat_height = 0;
-  gint style_min_height = 0;
-
-  g_assert (GTK_IS_BIN (widget));
-  g_assert (min_height != NULL);
-  g_assert (nat_height != NULL);
-
-  state = gtk_widget_get_state_flags (widget);
-  style_context = gtk_widget_get_style_context (widget);
-
-  gtk_style_context_get (style_context, state,
-                         "min-height", &style_min_height,
-                         NULL);
-
-  gtk_style_context_get_border (style_context, state, &border);
-  gtk_style_context_get_margin (style_context, state, &margin);
-  gtk_style_context_get_padding (style_context, state, &padding);
-
-  child = gtk_bin_get_child (GTK_BIN (widget));
-  if (child != NULL)
-    gtk_widget_get_preferred_height (child, &child_min_height, &child_nat_height);
-
-#define BORDER_HEIGHT(b) ((b).right - (b).left)
-
-  *min_height = child_min_height + BORDER_HEIGHT (border) + BORDER_HEIGHT (margin) + BORDER_HEIGHT (padding);
-  *nat_height = child_nat_height + BORDER_HEIGHT (border) + BORDER_HEIGHT (margin) + BORDER_HEIGHT (padding);
-
-  *min_height = MAX (*min_height, style_min_height);
-  *nat_height = MAX (*nat_height, style_min_height);
-
-#undef BORDER_HEIGHT
+  pnl_dock_bar_update_layout (self);
 }
 
 static void
@@ -244,14 +169,12 @@ pnl_dock_bar_class_init (PnlDockBarClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+  GtkContainerClass *container_class = GTK_CONTAINER_CLASS (klass);
 
   object_class->get_property = pnl_dock_bar_get_property;
   object_class->set_property = pnl_dock_bar_set_property;
 
-  widget_class->get_preferred_width = pnl_dock_bar_get_preferred_width;
-  widget_class->get_preferred_height = pnl_dock_bar_get_preferred_height;
-  widget_class->draw = pnl_gtk_bin_draw;
-  widget_class->size_allocate = pnl_gtk_bin_size_allocate;
+  container_class->add = pnl_dock_bar_add;
 
   properties [PROP_POSITION] =
     g_param_spec_enum ("position",
@@ -276,7 +199,7 @@ pnl_dock_bar_init (PnlDockBar *self)
                             "spacing", 0,
                             "visible", TRUE,
                             NULL);
-  gtk_container_add (GTK_CONTAINER (self), GTK_WIDGET (priv->box));
+  GTK_CONTAINER_CLASS (pnl_dock_bar_parent_class)->add (GTK_CONTAINER (self), GTK_WIDGET (priv->box));
 
   pnl_dock_bar_update_layout (self);
 }

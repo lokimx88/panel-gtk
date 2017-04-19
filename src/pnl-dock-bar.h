@@ -21,17 +21,18 @@
 
 #include <gtk/gtk.h>
 
+#include "pnl-bin.h"
 #include "pnl-dock-item.h"
 
 G_BEGIN_DECLS
 
 #define PNL_TYPE_DOCK_BAR (pnl_dock_bar_get_type())
 
-G_DECLARE_DERIVABLE_TYPE (PnlDockBar, pnl_dock_bar, PNL, DOCK_BAR, GtkBin)
+G_DECLARE_DERIVABLE_TYPE (PnlDockBar, pnl_dock_bar, PNL, DOCK_BAR, PnlBin)
 
 struct _PnlDockBarClass
 {
-  GtkBinClass parent_class;
+  PnlBinClass parent_class;
 
   gpointer _reserved1;
   gpointer _reserved2;
