@@ -19,6 +19,7 @@
 
 #define G_LOG_DOMAIN "pnl-tab"
 
+#include "pnl-dock-item.h"
 #include "pnl-tab.h"
 #include "pnl-util-private.h"
 
@@ -552,6 +553,24 @@ pnl_tab_size_allocate (GtkWidget     *widget,
 }
 
 static void
+pnl_tab_close_clicked (PnlTab    *self,
+                       GtkWidget *button)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_assert (PNL_IS_TAB (self));
+  g_assert (GTK_IS_BUTTON (button));
+
+  g_object_ref (self);
+
+  if (PNL_IS_DOCK_ITEM (priv->widget) &&
+      pnl_dock_item_get_can_close (PNL_DOCK_ITEM (priv->widget)))
+    pnl_dock_item_close (PNL_DOCK_ITEM (priv->widget));
+
+  g_object_unref (self);
+}
+
+static void
 pnl_tab_get_property (GObject    *object,
                       guint       prop_id,
                       GValue     *value,
@@ -754,6 +773,11 @@ pnl_tab_init (PnlTab *self)
                                                      NULL),
                               "visible", TRUE,
                               NULL);
+  g_signal_connect_object (priv->close,
+                           "clicked",
+                           G_CALLBACK (pnl_tab_close_clicked),
+                           self,
+                           G_CONNECT_SWAPPED);
   gtk_style_context_add_class (gtk_widget_get_style_context (GTK_WIDGET (priv->close)), "close");
   gtk_box_pack_end (priv->box, GTK_WIDGET (priv->close), FALSE, FALSE, 0);
   g_object_bind_property (self, "can-close", priv->close, "visible", G_BINDING_SYNC_CREATE);
