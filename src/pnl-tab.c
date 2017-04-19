@@ -571,6 +571,33 @@ pnl_tab_close_clicked (PnlTab    *self,
 }
 
 static void
+pnl_tab_minimize_clicked (PnlTab    *self,
+                          GtkWidget *button)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_assert (PNL_IS_TAB (self));
+  g_assert (GTK_IS_BUTTON (button));
+
+  g_object_ref (self);
+
+  if (PNL_IS_DOCK_ITEM (priv->widget))
+    {
+      PnlDockItem *item = PNL_DOCK_ITEM (priv->widget);
+
+      for (PnlDockItem *parent = pnl_dock_item_get_parent (item);
+           parent != NULL;
+           parent = pnl_dock_item_get_parent (parent))
+        {
+          if (pnl_dock_item_minimize (parent, item))
+            break;
+        }
+    }
+
+  g_object_unref (self);
+}
+
+static void
 pnl_tab_get_property (GObject    *object,
                       guint       prop_id,
                       GValue     *value,
@@ -790,6 +817,11 @@ pnl_tab_init (PnlTab *self)
                                                         NULL),
                                  "visible", TRUE,
                                  NULL);
+  g_signal_connect_object (priv->minimize,
+                           "clicked",
+                           G_CALLBACK (pnl_tab_minimize_clicked),
+                           self,
+                           G_CONNECT_SWAPPED);
   gtk_style_context_add_class (gtk_widget_get_style_context (GTK_WIDGET (priv->minimize)), "minimize");
   gtk_box_pack_end (priv->box, GTK_WIDGET (priv->minimize), FALSE, FALSE, 0);
 }
