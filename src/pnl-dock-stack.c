@@ -155,6 +155,12 @@ pnl_dock_stack_init (PnlDockStack *self)
 
   priv->edge = GTK_POS_TOP;
 
+  /*
+   * NOTE: setting a transition for the stack seems to muck up
+   *       focus, causing the old-tab to get refocused. So we can't
+   *       switch to CROSSFADE just yet.
+   */
+
   priv->stack = g_object_new (GTK_TYPE_STACK,
                               "homogeneous", TRUE,
                               "visible", TRUE,
