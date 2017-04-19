@@ -117,6 +117,7 @@ pnl_dock_edges_init (PnlDockEdges *self)
   PnlDockEdgesPrivate *priv = pnl_dock_edges_get_instance_private (self);
 
   priv->top = g_object_new (PNL_TYPE_DOCK_BAR,
+                            "position", GTK_POS_TOP,
                             "visible", TRUE,
                             NULL);
   GTK_CONTAINER_CLASS (pnl_dock_edges_parent_class)->add (GTK_CONTAINER (self), GTK_WIDGET (priv->top));
@@ -127,6 +128,7 @@ pnl_dock_edges_init (PnlDockEdges *self)
                            NULL);
 
   priv->left = g_object_new (PNL_TYPE_DOCK_BAR,
+                             "position", GTK_POS_LEFT,
                              "visible", TRUE,
                              NULL);
   GTK_CONTAINER_CLASS (pnl_dock_edges_parent_class)->add (GTK_CONTAINER (self), GTK_WIDGET (priv->left));
@@ -146,6 +148,7 @@ pnl_dock_edges_init (PnlDockEdges *self)
                            NULL);
 
   priv->right = g_object_new (PNL_TYPE_DOCK_BAR,
+                              "position", GTK_POS_RIGHT,
                               "visible", TRUE,
                               NULL);
   GTK_CONTAINER_CLASS (pnl_dock_edges_parent_class)->add (GTK_CONTAINER (self), GTK_WIDGET (priv->right));
@@ -155,6 +158,7 @@ pnl_dock_edges_init (PnlDockEdges *self)
                            NULL);
 
   priv->bottom = g_object_new (PNL_TYPE_DOCK_BAR,
+                               "position", GTK_POS_BOTTOM,
                                "visible", TRUE,
                                NULL);
   GTK_CONTAINER_CLASS (pnl_dock_edges_parent_class)->add (GTK_CONTAINER (self), GTK_WIDGET (priv->bottom));
