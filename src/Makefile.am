@@ -11,6 +11,7 @@ headers_DATA = \
 	pnl-bin.h \
 	pnl-dock-bar.h \
 	pnl-dock-bin.h \
+	pnl-dock-edges.h \
 	pnl-dock-item.h \
 	pnl-dock-manager.h \
 	pnl-dock-overlay.h \
@@ -38,6 +39,7 @@ libpanel_gtk_@API_VERSION@_la_SOURCES = \
 	pnl-dock-bin-edge-private.h \
 	pnl-dock-bin-edge.c \
 	pnl-dock-bin.c \
+	pnl-dock-edges.c \
 	pnl-dock-item.c \
 	pnl-dock-manager.c \
 	pnl-dock-overlay-edge.c \
