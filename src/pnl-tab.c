@@ -109,6 +109,39 @@ static GParamSpec *properties [N_PROPS];
 static guint signals [N_SIGNALS];
 
 static void
+pnl_tab_get_inner_allocation (PnlTab        *self,
+                              GtkAllocation *alloc)
+{
+  GtkBorder margin;
+  GtkBorder border;
+  GtkStyleContext *style_context;
+  GtkStateFlags flags;
+
+  g_assert (PNL_IS_TAB (self));
+  g_assert (alloc != NULL);
+
+  gtk_widget_get_allocation (GTK_WIDGET (self), alloc);
+
+  style_context = gtk_widget_get_style_context (GTK_WIDGET (self));
+  flags = gtk_widget_get_state_flags (GTK_WIDGET (self));
+
+  gtk_style_context_get_border (style_context, flags, &margin);
+  gtk_style_context_get_border (style_context, flags, &border);
+
+  alloc->x += border.left;
+  alloc->x += margin.left;
+
+  alloc->y += border.top;
+  alloc->y += margin.top;
+
+  alloc->width -= (border.right + border.left);
+  alloc->width -= (margin.right + margin.left);
+
+  alloc->height -= (border.bottom + border.top);
+  alloc->height -= (margin.bottom + margin.top);
+}
+
+static void
 pnl_tab_apply_state (PnlTab *self)
 {
   PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
@@ -215,17 +248,102 @@ pnl_tab_update_edge (PnlTab *self)
 }
 
 static gboolean
+get_widget_coordinates (GtkWidget *widget,
+                        GdkEvent  *event,
+                        gdouble   *x,
+                        gdouble   *y)
+{
+  GdkWindow *window = ((GdkEventAny *)event)->window;
+  GdkWindow *target = gtk_widget_get_window (widget);
+  gdouble tx, ty;
+
+  if (!gdk_event_get_coords (event, &tx, &ty))
+    return FALSE;
+
+  while (window && window != target)
+    {
+      gint window_x, window_y;
+
+      gdk_window_get_position (window, &window_x, &window_y);
+      tx += window_x;
+      ty += window_y;
+
+      window = gdk_window_get_parent (window);
+    }
+
+  if (window)
+    {
+      *x = tx;
+      *y = ty;
+
+      return TRUE;
+    }
+  else
+    return FALSE;
+}
+
+static void
+pnl_tab_update_prelight (PnlTab   *self,
+                         GdkEvent *event)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+  gdouble x, y;
+
+  g_assert (PNL_IS_TAB (self));
+  g_assert (event != NULL);
+
+  if (get_widget_coordinates (GTK_WIDGET (self), (GdkEvent *)event, &x, &y))
+    {
+      GtkAllocation alloc;
+
+      pnl_tab_get_inner_allocation (self, &alloc);
+
+      /*
+       * We've translated our x,y coords to be relative to the widget, so we
+       * can discard the x,y of the allocation.
+       */
+      alloc.x = 0;
+      alloc.y = 0;
+
+      if (x >= alloc.x &&
+          x <= (alloc.x + alloc.width) &&
+          y >= alloc.y &&
+          y <= (alloc.y + alloc.height))
+        {
+          priv->pointer_in_widget = TRUE;
+          gtk_widget_set_state_flags (GTK_WIDGET (self), GTK_STATE_FLAG_PRELIGHT, FALSE);
+          return;
+        }
+    }
+
+  priv->pointer_in_widget = FALSE;
+  gtk_widget_unset_state_flags (GTK_WIDGET (self), GTK_STATE_FLAG_PRELIGHT);
+}
+
+static gboolean
+pnl_tab_motion_notify_event (GtkWidget      *widget,
+                             GdkEventMotion *event)
+{
+  PnlTab *self = (PnlTab *)widget;
+
+  g_assert (PNL_IS_TAB (self));
+  g_assert (event != NULL);
+
+  pnl_tab_update_prelight (self, (GdkEvent *)event);
+
+  return GDK_EVENT_PROPAGATE;
+}
+
+static gboolean
 pnl_tab_enter_notify_event (GtkWidget        *widget,
                             GdkEventCrossing *event)
 {
   PnlTab *self = (PnlTab *)widget;
-  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
 
-  g_return_val_if_fail (PNL_IS_TAB (self), FALSE);
-  g_return_val_if_fail (event != NULL, FALSE);
+  g_assert (PNL_IS_TAB (self));
+  g_assert (event != NULL);
 
-  priv->pointer_in_widget = TRUE;
-  gtk_widget_set_state_flags (widget, GTK_STATE_FLAG_PRELIGHT, FALSE);
+  pnl_tab_update_prelight (self, (GdkEvent *)event);
 
   return GDK_EVENT_PROPAGATE;
 }
@@ -235,13 +353,11 @@ pnl_tab_leave_notify_event (GtkWidget        *widget,
                             GdkEventCrossing *event)
 {
   PnlTab *self = (PnlTab *)widget;
-  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
 
   g_return_val_if_fail (PNL_IS_TAB (self), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
 
-  priv->pointer_in_widget = FALSE;
-  gtk_widget_unset_state_flags (widget, GTK_STATE_FLAG_PRELIGHT);
+  pnl_tab_update_prelight (self, (GdkEvent *)event);
 
   return GDK_EVENT_PROPAGATE;
 }
@@ -539,6 +655,7 @@ pnl_tab_class_init (PnlTabClass *klass)
   widget_class->destroy = pnl_tab_destroy;
   widget_class->button_press_event = pnl_tab_button_press_event;
   widget_class->button_release_event = pnl_tab_button_release_event;
+  widget_class->motion_notify_event = pnl_tab_motion_notify_event;
   widget_class->enter_notify_event = pnl_tab_enter_notify_event;
   widget_class->leave_notify_event = pnl_tab_leave_notify_event;
   widget_class->realize = pnl_tab_realize;
@@ -608,6 +725,7 @@ pnl_tab_init (PnlTab *self)
   gtk_widget_add_events (GTK_WIDGET (self),
                          GDK_BUTTON_PRESS_MASK |
                          GDK_BUTTON_RELEASE_MASK |
+                         GDK_POINTER_MOTION_MASK |
                          GDK_ENTER_NOTIFY_MASK|
                          GDK_LEAVE_NOTIFY_MASK);
   gtk_widget_set_hexpand (GTK_WIDGET (self), TRUE);
