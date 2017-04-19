@@ -122,12 +122,9 @@ static void pnl_dock_bin_init_dock_item_iface (PnlDockItemInterface *iface);
 
 G_DEFINE_TYPE_EXTENDED (PnlDockBin, pnl_dock_bin, GTK_TYPE_CONTAINER, 0,
                         G_ADD_PRIVATE (PnlDockBin)
-                        G_IMPLEMENT_INTERFACE (GTK_TYPE_BUILDABLE,
-                                               pnl_dock_bin_init_buildable_iface)
-                        G_IMPLEMENT_INTERFACE (PNL_TYPE_DOCK_ITEM,
-                                               pnl_dock_bin_init_dock_item_iface)
-                        G_IMPLEMENT_INTERFACE (PNL_TYPE_DOCK,
-                                               pnl_dock_bin_init_dock_iface))
+                        G_IMPLEMENT_INTERFACE (GTK_TYPE_BUILDABLE, pnl_dock_bin_init_buildable_iface)
+                        G_IMPLEMENT_INTERFACE (PNL_TYPE_DOCK_ITEM, pnl_dock_bin_init_dock_item_iface)
+                        G_IMPLEMENT_INTERFACE (PNL_TYPE_DOCK, pnl_dock_bin_init_dock_iface))
 
 enum {
   PROP_0,
