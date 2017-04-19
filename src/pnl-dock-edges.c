@@ -172,6 +172,8 @@ pnl_dock_edges_minimize (PnlDockItem     *item,
 {
   PnlDockEdges *self = (PnlDockEdges *)item;
   PnlDockEdgesPrivate *priv = pnl_dock_edges_get_instance_private (self);
+  GtkContainer *container;
+  gdouble angle = 0.0;
   GtkWidget *button;
   gchar *title;
 
@@ -181,37 +183,45 @@ pnl_dock_edges_minimize (PnlDockItem     *item,
 
   title = pnl_dock_item_get_title (child);
 
-  button = g_object_new (GTK_TYPE_BUTTON,
-                         "child", g_object_new (GTK_TYPE_LABEL,
-                                                "visible", TRUE,
-                                                "label", title,
-                                                "use-underline", TRUE,
-                                                "angle", 90.0,
-                                                NULL),
-                         "visible", TRUE,
-                         NULL);
-
   switch (*position)
     {
     case GTK_POS_LEFT:
-      gtk_container_add (GTK_CONTAINER (priv->left), button);
+      angle = 90.0;
+      container = GTK_CONTAINER (priv->left);
       break;
 
     case GTK_POS_RIGHT:
-      gtk_container_add (GTK_CONTAINER (priv->right), button);
+      angle = 270.0;
+      container = GTK_CONTAINER (priv->right);
       break;
 
     case GTK_POS_TOP:
-      gtk_container_add (GTK_CONTAINER (priv->top), button);
+      container = GTK_CONTAINER (priv->top);
       break;
 
     case GTK_POS_BOTTOM:
-      gtk_container_add (GTK_CONTAINER (priv->bottom), button);
+      container = GTK_CONTAINER (priv->bottom);
       break;
 
     default:
       g_assert_not_reached ();
     }
+
+  button = g_object_new (GTK_TYPE_BUTTON,
+                         "hexpand", FALSE,
+                         "vexpand", FALSE,
+                         "halign", GTK_ALIGN_START,
+                         "valign", GTK_ALIGN_START,
+                         "child", g_object_new (GTK_TYPE_LABEL,
+                                                "visible", TRUE,
+                                                "label", title,
+                                                "use-underline", TRUE,
+                                                "angle", angle,
+                                                NULL),
+                         "visible", TRUE,
+                         NULL);
+
+  gtk_container_add (container, button);
 
   g_free (title);
 
