@@ -19,6 +19,7 @@
 #include "pnl-dock-bin.h"
 #include "pnl-dock-bin-edge.h"
 #include "pnl-dock-bin-edge-private.h"
+#include "pnl-dock-item.h"
 #include "pnl-dock-revealer.h"
 
 typedef struct
@@ -26,9 +27,11 @@ typedef struct
   GtkPositionType edge : 3;
 } PnlDockBinEdgePrivate;
 
+static void dock_item_iface_init (PnlDockItemInterface *iface);
+
 G_DEFINE_TYPE_EXTENDED (PnlDockBinEdge, pnl_dock_bin_edge, PNL_TYPE_DOCK_REVEALER, 0,
                         G_ADD_PRIVATE (PnlDockBinEdge)
-                        G_IMPLEMENT_INTERFACE (PNL_TYPE_DOCK_ITEM, NULL))
+                        G_IMPLEMENT_INTERFACE (PNL_TYPE_DOCK_ITEM, dock_item_iface_init))
 
 enum {
   PROP_0,
@@ -139,6 +142,7 @@ pnl_dock_bin_edge_add (GtkContainer *container,
 
   child = gtk_bin_get_child (GTK_BIN (container));
   gtk_container_add (GTK_CONTAINER (child), widget);
+  gtk_widget_show (child);
 }
 
 static void
@@ -250,4 +254,25 @@ pnl_dock_bin_edge_init (PnlDockBinEdge *self)
                         "visible", TRUE,
                         NULL);
   GTK_CONTAINER_CLASS (pnl_dock_bin_edge_parent_class)->add (GTK_CONTAINER (self), child);
+}
+
+static void
+pnl_dock_bin_edge_update_visibility (PnlDockItem *item)
+{
+  PnlDockBinEdge *self = (PnlDockBinEdge *)item;
+  GtkWidget *child;
+  gboolean visible = FALSE;
+
+  g_assert (PNL_IS_DOCK_BIN_EDGE (self));
+
+  if (NULL != (child = gtk_bin_get_child (GTK_BIN (self))))
+    visible = pnl_dock_item_has_widgets (PNL_DOCK_ITEM (child));
+
+  gtk_widget_set_visible (GTK_WIDGET (self), visible);
+}
+
+static void
+dock_item_iface_init (PnlDockItemInterface *iface)
+{
+  iface->update_visibility = pnl_dock_bin_edge_update_visibility;
 }
