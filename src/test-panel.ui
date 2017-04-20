@@ -87,6 +87,8 @@
             <property name="visible">true</property>
             <child>
               <object class="PnlDockBin" id="dockbin">
+                <property name="right-visible">true</property>
+                <property name="bottom-visible">true</property>
                 <property name="visible">true</property>
                 <child>
                   <object class="GtkScrolledWindow">
