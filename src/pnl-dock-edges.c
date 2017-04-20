@@ -180,6 +180,7 @@ pnl_dock_edges_minimize (PnlDockItem     *item,
   GtkContainer *container;
   GtkWidget *button;
   gchar *title;
+  GtkPositionType edge;
 
   g_assert (PNL_IS_DOCK_EDGES (self));
   g_assert (PNL_IS_DOCK_ITEM (child));
@@ -187,14 +188,18 @@ pnl_dock_edges_minimize (PnlDockItem     *item,
 
   title = pnl_dock_item_get_title (child);
 
-  switch (*position)
+  edge = *position;
+
+  switch (edge)
     {
     case GTK_POS_LEFT:
       container = GTK_CONTAINER (priv->left);
+      edge = GTK_POS_RIGHT;
       break;
 
     case GTK_POS_RIGHT:
       container = GTK_CONTAINER (priv->right);
+      edge = GTK_POS_LEFT;
       break;
 
     case GTK_POS_TOP:
@@ -211,7 +216,7 @@ pnl_dock_edges_minimize (PnlDockItem     *item,
 
   button = g_object_new (PNL_TYPE_TAB,
                          "can-close", FALSE,
-                         "edge", *position,
+                         "edge", edge,
                          "hexpand", FALSE,
                          "vexpand", FALSE,
                          "halign", GTK_ALIGN_START,
