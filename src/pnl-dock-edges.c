@@ -22,6 +22,7 @@
 #include "pnl-dock-bar.h"
 #include "pnl-dock-item.h"
 #include "pnl-dock-edges.h"
+#include "pnl-tab.h"
 
 typedef struct
 {
@@ -177,7 +178,6 @@ pnl_dock_edges_minimize (PnlDockItem     *item,
   PnlDockEdges *self = (PnlDockEdges *)item;
   PnlDockEdgesPrivate *priv = pnl_dock_edges_get_instance_private (self);
   GtkContainer *container;
-  gdouble angle = 0.0;
   GtkWidget *button;
   gchar *title;
 
@@ -190,12 +190,10 @@ pnl_dock_edges_minimize (PnlDockItem     *item,
   switch (*position)
     {
     case GTK_POS_LEFT:
-      angle = 90.0;
       container = GTK_CONTAINER (priv->left);
       break;
 
     case GTK_POS_RIGHT:
-      angle = 270.0;
       container = GTK_CONTAINER (priv->right);
       break;
 
@@ -211,17 +209,14 @@ pnl_dock_edges_minimize (PnlDockItem     *item,
       g_assert_not_reached ();
     }
 
-  button = g_object_new (GTK_TYPE_BUTTON,
+  button = g_object_new (PNL_TYPE_TAB,
+                         "can-close", FALSE,
+                         "edge", *position,
                          "hexpand", FALSE,
                          "vexpand", FALSE,
                          "halign", GTK_ALIGN_START,
                          "valign", GTK_ALIGN_START,
-                         "child", g_object_new (GTK_TYPE_LABEL,
-                                                "visible", TRUE,
-                                                "label", title,
-                                                "use-underline", TRUE,
-                                                "angle", angle,
-                                                NULL),
+                         "title", title,
                          "visible", TRUE,
                          NULL);
 
