@@ -128,8 +128,13 @@ G_DEFINE_TYPE_EXTENDED (PnlDockBin, pnl_dock_bin, GTK_TYPE_CONTAINER, 0,
 
 enum {
   PROP_0,
+  PROP_LEFT_VISIBLE,
+  PROP_RIGHT_VISIBLE,
+  PROP_TOP_VISIBLE,
+  PROP_BOTTOM_VISIBLE,
+  N_PROPS,
+
   PROP_MANAGER,
-  N_PROPS
 };
 
 enum {
@@ -145,8 +150,54 @@ enum {
   N_STYLE_PROPS
 };
 
+static GParamSpec *properties [N_PROPS];
 static GParamSpec *child_properties [N_CHILD_PROPS];
 static GParamSpec *style_properties [N_STYLE_PROPS];
+
+static gboolean
+get_visible (PnlDockBin  *self,
+             const gchar *action_name)
+{
+  PnlDockBinPrivate *priv = pnl_dock_bin_get_instance_private (self);
+  GAction *action;
+
+  g_assert (PNL_IS_DOCK_BIN (self));
+  g_assert (action_name != NULL);
+
+  action = g_action_map_lookup_action (G_ACTION_MAP (priv->actions), action_name);
+
+  if (action != NULL)
+    {
+      GVariant *v = g_action_get_state (action);
+      gboolean ret = v ? g_variant_get_boolean (v) : FALSE;
+
+      g_clear_pointer (&v, g_variant_unref);
+
+      return ret;
+    }
+
+  return FALSE;
+}
+
+static gboolean
+set_visible (PnlDockBin  *self,
+             const gchar *action_name,
+             gboolean     value)
+{
+  PnlDockBinPrivate *priv = pnl_dock_bin_get_instance_private (self);
+  GAction *action;
+
+  g_assert (PNL_IS_DOCK_BIN (self));
+  g_assert (action_name != NULL);
+
+  action = g_action_map_lookup_action (G_ACTION_MAP (priv->actions), action_name);
+
+  if (action != NULL)
+    g_simple_action_set_state (G_SIMPLE_ACTION (action), g_variant_new_boolean (value));
+
+  return FALSE;
+}
+
 
 static gboolean
 map_boolean_to_variant (GBinding     *binding,
@@ -1332,6 +1383,7 @@ pnl_dock_bin_create_edge (PnlDockBin          *self,
                           PnlDockBinChild     *child,
                           PnlDockBinChildType  type)
 {
+  gboolean reveal_child = FALSE;
   GAction *action;
 
   g_assert (PNL_IS_DOCK_BIN (self));
@@ -1355,7 +1407,28 @@ pnl_dock_bin_create_edge (PnlDockBin          *self,
       return;
     }
 
-  g_object_set (child->widget, "edge", (GtkPositionType)type, NULL);
+  /*
+   * If the user set the initial state for the edge before we created the
+   * edge, the value for it will be the state to the action. We need to
+   * grab that and apply it for our initial state.
+   */
+  switch (type)
+    {
+    case PNL_DOCK_BIN_CHILD_LEFT:   reveal_child = get_visible (self, "left-visible");   break;
+    case PNL_DOCK_BIN_CHILD_RIGHT:  reveal_child = get_visible (self, "right-visible");  break;
+    case PNL_DOCK_BIN_CHILD_TOP:    reveal_child = get_visible (self, "top-visible");    break;
+    case PNL_DOCK_BIN_CHILD_BOTTOM: reveal_child = get_visible (self, "bottom-visible"); break;
+    case PNL_DOCK_BIN_CHILD_CENTER:
+    case LAST_PNL_DOCK_BIN_CHILD:
+    default:
+      break;
+    }
+
+  g_object_set (child->widget,
+                "edge", (GtkPositionType)type,
+                "reveal-child", reveal_child,
+                NULL);
+
   gtk_widget_set_parent (g_object_ref_sink (child->widget), GTK_WIDGET (self));
 
   action = pnl_dock_bin_get_action_for_type (self, type);
@@ -1533,6 +1606,22 @@ pnl_dock_bin_get_property (GObject    *object,
 
   switch (prop_id)
     {
+    case PROP_LEFT_VISIBLE:
+      g_value_set_boolean (value, get_visible (self, "left-visible"));
+      break;
+
+    case PROP_RIGHT_VISIBLE:
+      g_value_set_boolean (value, get_visible (self, "right-visible"));
+      break;
+
+    case PROP_TOP_VISIBLE:
+      g_value_set_boolean (value, get_visible (self, "top-visible"));
+      break;
+
+    case PROP_BOTTOM_VISIBLE:
+      g_value_set_boolean (value, get_visible (self, "bottom-visible"));
+      break;
+
     case PROP_MANAGER:
       g_value_set_object (value, pnl_dock_item_get_manager (PNL_DOCK_ITEM (self)));
       break;
@@ -1552,6 +1641,22 @@ pnl_dock_bin_set_property (GObject      *object,
 
   switch (prop_id)
     {
+    case PROP_LEFT_VISIBLE:
+      set_visible (self, "left-visible", g_value_get_boolean (value));
+      break;
+
+    case PROP_RIGHT_VISIBLE:
+      set_visible (self, "right-visible", g_value_get_boolean (value));
+      break;
+
+    case PROP_TOP_VISIBLE:
+      set_visible (self, "top-visible", g_value_get_boolean (value));
+      break;
+
+    case PROP_BOTTOM_VISIBLE:
+      set_visible (self, "bottom-visible", g_value_get_boolean (value));
+      break;
+
     case PROP_MANAGER:
       pnl_dock_item_set_manager (PNL_DOCK_ITEM (self), g_value_get_object (value));
       break;
@@ -1593,6 +1698,36 @@ pnl_dock_bin_class_init (PnlDockBinClass *klass)
   klass->create_edge = pnl_dock_bin_real_create_edge;
 
   g_object_class_override_property (object_class, PROP_MANAGER, "manager");
+
+  properties [PROP_LEFT_VISIBLE] =
+    g_param_spec_boolean ("left-visible",
+                          "Left Visible",
+                          "If the left panel is visible.",
+                          FALSE,
+                          (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
+  properties [PROP_RIGHT_VISIBLE] =
+    g_param_spec_boolean ("right-visible",
+                          "Right Visible",
+                          "If the right panel is visible.",
+                          FALSE,
+                          (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
+  properties [PROP_TOP_VISIBLE] =
+    g_param_spec_boolean ("top-visible",
+                          "Top Visible",
+                          "If the top panel is visible.",
+                          FALSE,
+                          (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
+  properties [PROP_BOTTOM_VISIBLE] =
+    g_param_spec_boolean ("bottom-visible",
+                          "Bottom Visible",
+                          "If the bottom panel is visible.",
+                          FALSE,
+                          (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_properties (object_class, N_PROPS, properties);
 
   child_properties [CHILD_PROP_POSITION] =
     g_param_spec_enum ("position",
