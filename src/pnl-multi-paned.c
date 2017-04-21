@@ -1284,26 +1284,33 @@ allocation_stage_allocate (PnlMultiPaned   *self,
 
       gtk_widget_size_allocate (child->widget, &child->alloc);
 
-      if ((child->handle != NULL) && (state->n_children != (i + 1)))
+      if (child->handle != NULL)
         {
-          if (state->orientation == GTK_ORIENTATION_HORIZONTAL)
+          if (state->n_children != (i + 1))
             {
-              gdk_window_move_resize (child->handle,
-                                      child->alloc.x + child->alloc.width - (HANDLE_WIDTH / 2),
-                                      child->alloc.y,
-                                      HANDLE_WIDTH,
-                                      child->alloc.height);
+              if (state->orientation == GTK_ORIENTATION_HORIZONTAL)
+                {
+                  gdk_window_move_resize (child->handle,
+                                          child->alloc.x + child->alloc.width - (HANDLE_WIDTH / 2),
+                                          child->alloc.y,
+                                          HANDLE_WIDTH,
+                                          child->alloc.height);
+                }
+              else
+                {
+                  gdk_window_move_resize (child->handle,
+                                          child->alloc.x,
+                                          child->alloc.y + child->alloc.height - (HANDLE_HEIGHT / 2),
+                                          child->alloc.width,
+                                          HANDLE_HEIGHT);
+                }
+
+              gdk_window_show (child->handle);
             }
           else
             {
-              gdk_window_move_resize (child->handle,
-                                      child->alloc.x,
-                                      child->alloc.y + child->alloc.height - (HANDLE_HEIGHT / 2),
-                                      child->alloc.width,
-                                      HANDLE_HEIGHT);
+              gdk_window_hide (child->handle);
             }
-
-          gdk_window_show (child->handle);
         }
     }
 }
