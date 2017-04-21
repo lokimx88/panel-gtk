@@ -154,6 +154,42 @@ static GParamSpec *properties [N_PROPS];
 static GParamSpec *child_properties [N_CHILD_PROPS];
 static GParamSpec *style_properties [N_STYLE_PROPS];
 
+static GAction *
+pnl_dock_bin_get_action_for_type (PnlDockBin          *self,
+                                  PnlDockBinChildType  type)
+{
+  PnlDockBinPrivate *priv = pnl_dock_bin_get_instance_private (self);
+  const gchar *name = NULL;
+
+  g_assert (PNL_IS_DOCK_BIN (self));
+
+  switch (type)
+    {
+    case PNL_DOCK_BIN_CHILD_LEFT:
+      name = "left-visible";
+      break;
+
+    case PNL_DOCK_BIN_CHILD_RIGHT:
+      name = "right-visible";
+      break;
+
+    case PNL_DOCK_BIN_CHILD_TOP:
+      name = "top-visible";
+      break;
+
+    case PNL_DOCK_BIN_CHILD_BOTTOM:
+      name = "bottom-visible";
+      break;
+
+    case PNL_DOCK_BIN_CHILD_CENTER:
+    case LAST_PNL_DOCK_BIN_CHILD:
+    default:
+      g_assert_not_reached ();
+    }
+
+  return g_action_map_lookup_action (G_ACTION_MAP (priv->actions), name);
+}
+
 static gboolean
 get_visible (PnlDockBin  *self,
              const gchar *action_name)
@@ -198,6 +234,38 @@ set_visible (PnlDockBin  *self,
   return FALSE;
 }
 
+static void
+pnl_dock_bin_update_actions (PnlDockBin *self)
+{
+  PnlDockBinPrivate *priv = pnl_dock_bin_get_instance_private (self);
+  guint i;
+
+  g_assert (PNL_IS_DOCK_BIN (self));
+
+  /*
+   * We need to walk each of the children edges looking for widgets
+   * that are visible. If so, we need to keep the edge action enabled.
+   * Otherwise disable it, so any buttons representing the action get
+   * properly desensitized.
+   */
+
+  for (i = 0; i < G_N_ELEMENTS (priv->children); i++)
+    {
+      PnlDockBinChild *child = &priv->children [i];
+      GAction *action;
+      gboolean enabled = FALSE;
+
+      if (child->type == PNL_DOCK_BIN_CHILD_CENTER)
+        continue;
+
+      action = pnl_dock_bin_get_action_for_type (self, child->type);
+
+      if (child->widget != NULL)
+        enabled = pnl_dock_item_has_widgets (PNL_DOCK_ITEM (child->widget));
+
+      g_simple_action_set_enabled (G_SIMPLE_ACTION (action), enabled);
+    }
+}
 
 static gboolean
 map_boolean_to_variant (GBinding     *binding,
@@ -291,29 +359,6 @@ pnl_dock_bin_update_focus_chain (PnlDockBin *self)
       gtk_container_set_focus_chain (GTK_CONTAINER (self), focus_chain);
       g_list_free (focus_chain);
     }
-}
-
-static GAction *
-pnl_dock_bin_get_action_for_type (PnlDockBin          *self,
-                                  PnlDockBinChildType  type)
-{
-  PnlDockBinPrivate *priv = pnl_dock_bin_get_instance_private (self);
-  const gchar *name = NULL;
-
-  g_assert (PNL_IS_DOCK_BIN (self));
-
-  if (type == PNL_DOCK_BIN_CHILD_LEFT)
-    name = "left-visible";
-  else if (type == PNL_DOCK_BIN_CHILD_RIGHT)
-    name = "right-visible";
-  else if (type == PNL_DOCK_BIN_CHILD_TOP)
-    name = "top-visible";
-  else if (type == PNL_DOCK_BIN_CHILD_BOTTOM)
-    name = "bottom-visible";
-  else
-    g_assert_not_reached ();
-
-  return g_action_map_lookup_action (G_ACTION_MAP (priv->actions), name);
 }
 
 static void
@@ -2102,10 +2147,21 @@ pnl_dock_bin_minimize (PnlDockItem     *item,
 }
 
 static void
+pnl_dock_bin_update_visibility (PnlDockItem *item)
+{
+  PnlDockBin *self = (PnlDockBin *)item;
+
+  g_assert (PNL_IS_DOCK_BIN (self));
+
+  pnl_dock_bin_update_actions (self);
+}
+
+static void
 pnl_dock_bin_init_dock_item_iface (PnlDockItemInterface *iface)
 {
   iface->present_child = pnl_dock_bin_present_child;
   iface->get_child_visible = pnl_dock_bin_get_child_visible;
   iface->set_child_visible = pnl_dock_bin_set_child_visible;
   iface->minimize = pnl_dock_bin_minimize;
+  iface->update_visibility = pnl_dock_bin_update_visibility;
 }
