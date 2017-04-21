@@ -142,6 +142,10 @@ pnl_dock_bin_edge_add (GtkContainer *container,
 
   child = gtk_bin_get_child (GTK_BIN (container));
   gtk_container_add (GTK_CONTAINER (child), widget);
+
+  if (PNL_IS_DOCK_ITEM (child))
+    pnl_dock_item_adopt (PNL_DOCK_ITEM (container), PNL_DOCK_ITEM (child));
+
   gtk_widget_show (child);
 }
 

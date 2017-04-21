@@ -1437,6 +1437,8 @@ pnl_dock_bin_create_edge (PnlDockBin          *self,
                                G_BINDING_SYNC_CREATE,
                                map_boolean_to_variant,
                                NULL, NULL, NULL);
+
+  pnl_dock_item_adopt (PNL_DOCK_ITEM (self), PNL_DOCK_ITEM (child->widget));
 }
 
 static gboolean
