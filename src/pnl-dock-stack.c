@@ -318,9 +318,21 @@ pnl_dock_stack_set_child_visible (PnlDockItem *item,
 }
 
 static void
+pnl_dock_stack_update_visibility (PnlDockItem *item)
+{
+  g_assert (PNL_IS_DOCK_STACK (item));
+
+  if (!pnl_dock_item_has_widgets (item))
+    gtk_widget_hide (GTK_WIDGET (item));
+  else
+    gtk_widget_show (GTK_WIDGET (item));
+}
+
+static void
 pnl_dock_stack_init_dock_item_iface (PnlDockItemInterface *iface)
 {
   iface->present_child = pnl_dock_stack_present_child;
   iface->get_child_visible = pnl_dock_stack_get_child_visible;
   iface->set_child_visible = pnl_dock_stack_set_child_visible;
+  iface->update_visibility = pnl_dock_stack_update_visibility;
 }
