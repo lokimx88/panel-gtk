@@ -1212,7 +1212,7 @@ allocation_stage_expand (PnlMultiPaned   *self,
     }
 
   if (n_expand == 0)
-    return;
+    goto fill_last;
 
   if (IS_HORIZONTAL (state->orientation))
     adjust = state->avail_width / n_expand;
@@ -1248,6 +1248,8 @@ allocation_stage_expand (PnlMultiPaned   *self,
             }
         }
     }
+
+fill_last:
 
   if (IS_HORIZONTAL (state->orientation))
     {
