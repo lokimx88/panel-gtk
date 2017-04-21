@@ -545,6 +545,19 @@ pnl_dock_item_minimize (PnlDockItem     *self,
   return FALSE;
 }
 
+/**
+ * pnl_dock_item_get_title:
+ * @self: A #PnlDockItem
+ *
+ * Gets the title for the #PnlDockItem.
+ *
+ * Generally, you want to use a #PnlDockWidget which has a
+ * "title" property you can set. But this can be helpful
+ * for integration of various container widgets.
+ *
+ * Returns: (transfer full) (nullable): A newly allocated
+ *   string or %NULL.
+ */
 gchar *
 pnl_dock_item_get_title (PnlDockItem *self)
 {
@@ -556,6 +569,18 @@ pnl_dock_item_get_title (PnlDockItem *self)
   return NULL;
 }
 
+/**
+ * pnl_dock_item_release:
+ * @self: A #PnlDockItem
+ *
+ * This virtual method should remove @child from @self if the
+ * dock item knows how to do so. For example, the #PnlDockStack
+ * will remove @child from it's internal #GtkStack.
+ *
+ * After the virtual function has been executed, child tracking
+ * will be removed so that #PnlDockItem implementations do not
+ * need to implement themselves.
+ */
 void
 pnl_dock_item_release (PnlDockItem     *self,
                        PnlDockItem     *child)
