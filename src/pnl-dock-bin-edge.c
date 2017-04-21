@@ -268,7 +268,8 @@ pnl_dock_bin_edge_update_visibility (PnlDockItem *item)
   if (NULL != (child = gtk_bin_get_child (GTK_BIN (self))))
     visible = pnl_dock_item_has_widgets (PNL_DOCK_ITEM (child));
 
-  gtk_widget_set_visible (GTK_WIDGET (self), visible);
+  if (visible != pnl_dock_revealer_get_reveal_child (PNL_DOCK_REVEALER (self)))
+    pnl_dock_revealer_set_reveal_child (PNL_DOCK_REVEALER (self), visible);
 }
 
 static void
