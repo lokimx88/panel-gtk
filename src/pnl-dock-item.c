@@ -76,20 +76,6 @@ pnl_dock_item_real_get_manager (PnlDockItem *self)
 static void
 pnl_dock_item_real_update_visibility (PnlDockItem *self)
 {
-  GtkWidget *parent;
-
-  g_assert (PNL_IS_DOCK_ITEM (self));
-
-  for (parent = gtk_widget_get_parent (GTK_WIDGET (self));
-       parent != NULL;
-       parent = gtk_widget_get_parent (parent))
-    {
-      if (PNL_IS_DOCK_ITEM (parent))
-        {
-          pnl_dock_item_update_visibility (PNL_DOCK_ITEM (parent));
-          break;
-        }
-    }
 }
 
 static void
@@ -181,9 +167,19 @@ pnl_dock_item_set_manager (PnlDockItem    *self,
 void
 pnl_dock_item_update_visibility (PnlDockItem *self)
 {
+  GtkWidget *parent;
+
   g_return_if_fail (PNL_IS_DOCK_ITEM (self));
 
   PNL_DOCK_ITEM_GET_IFACE (self)->update_visibility (self);
+
+  for (parent = gtk_widget_get_parent (GTK_WIDGET (self));
+       parent != NULL;
+       parent = gtk_widget_get_parent (parent))
+    {
+      if (PNL_IS_DOCK_ITEM (parent))
+        PNL_DOCK_ITEM_GET_IFACE (parent)->update_visibility (PNL_DOCK_ITEM (parent));
+    }
 }
 
 static void
