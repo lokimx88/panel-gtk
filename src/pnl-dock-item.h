@@ -46,6 +46,8 @@ struct _PnlDockItemInterface
   gboolean        (*minimize)           (PnlDockItem     *self,
                                          PnlDockItem     *child,
                                          GtkPositionType *position);
+  void            (*release)            (PnlDockItem     *self,
+                                         PnlDockItem     *child);
 };
 
 PnlDockManager *pnl_dock_item_get_manager       (PnlDockItem     *self);
@@ -70,6 +72,8 @@ gboolean        pnl_dock_item_close             (PnlDockItem     *self);
 gboolean        pnl_dock_item_minimize          (PnlDockItem     *self,
                                                  PnlDockItem     *child,
                                                  GtkPositionType *position);
+void            pnl_dock_item_release           (PnlDockItem     *self,
+                                                 PnlDockItem     *child);
 void            _pnl_dock_item_printf           (PnlDockItem     *self);
 
 G_END_DECLS

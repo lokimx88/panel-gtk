@@ -115,12 +115,25 @@ pnl_dock_item_real_manager_set (PnlDockItem    *self,
 }
 
 static void
+pnl_dock_item_real_release (PnlDockItem *self,
+                            PnlDockItem *child)
+{
+  g_assert (PNL_IS_DOCK_ITEM (self));
+  g_assert (PNL_IS_DOCK_ITEM (child));
+
+  g_warning ("%s does not know how to release child %s",
+             G_OBJECT_TYPE_NAME (self),
+             G_OBJECT_TYPE_NAME (child));
+}
+
+static void
 pnl_dock_item_default_init (PnlDockItemInterface *iface)
 {
   iface->get_manager = pnl_dock_item_real_get_manager;
   iface->set_manager = pnl_dock_item_real_set_manager;
   iface->manager_set = pnl_dock_item_real_manager_set;
   iface->update_visibility = pnl_dock_item_real_update_visibility;
+  iface->release = pnl_dock_item_real_release;
 
   signals [MANAGER_SET] =
     g_signal_new ("manager-set",
@@ -541,4 +554,19 @@ pnl_dock_item_get_title (PnlDockItem *self)
     return PNL_DOCK_ITEM_GET_IFACE (self)->get_title (self);
 
   return NULL;
+}
+
+void
+pnl_dock_item_release (PnlDockItem     *self,
+                       PnlDockItem     *child)
+{
+  g_return_if_fail (PNL_IS_DOCK_ITEM (self));
+  g_return_if_fail (self == pnl_dock_item_get_parent (child));
+
+  PNL_DOCK_ITEM_GET_IFACE (self)->release (self, child);
+
+  g_object_weak_unref (G_OBJECT (child),
+                       pnl_dock_item_child_weak_notify,
+                       self);
+  pnl_dock_item_child_weak_notify (self, (GObject *)child);
 }
