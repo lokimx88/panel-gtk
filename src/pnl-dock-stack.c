@@ -329,10 +329,24 @@ pnl_dock_stack_update_visibility (PnlDockItem *item)
 }
 
 static void
+pnl_dock_stack_release (PnlDockItem *item,
+                        PnlDockItem *child)
+{
+  PnlDockStack *self = (PnlDockStack *)item;
+  PnlDockStackPrivate *priv = pnl_dock_stack_get_instance_private (self);
+
+  g_assert (PNL_IS_DOCK_STACK (self));
+  g_assert (PNL_IS_DOCK_ITEM (child));
+
+  gtk_container_remove (GTK_CONTAINER (priv->stack), GTK_WIDGET (child));
+}
+
+static void
 pnl_dock_stack_init_dock_item_iface (PnlDockItemInterface *iface)
 {
   iface->present_child = pnl_dock_stack_present_child;
   iface->get_child_visible = pnl_dock_stack_get_child_visible;
   iface->set_child_visible = pnl_dock_stack_set_child_visible;
   iface->update_visibility = pnl_dock_stack_update_visibility;
+  iface->release = pnl_dock_stack_release;
 }
