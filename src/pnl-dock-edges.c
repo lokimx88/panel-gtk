@@ -31,6 +31,8 @@ typedef struct
   PnlDockBar *right;
   PnlDockBar *bottom;
   PnlDockBar *top;
+
+  GList *children;
 } PnlDockEdgesPrivate;
 
 static void pnl_dock_edges_init_dock_item_iface (PnlDockItemInterface *iface);
@@ -170,6 +172,18 @@ pnl_dock_edges_init (PnlDockEdges *self)
                            NULL);
 }
 
+static void
+pnl_dock_edges_notify_show_preview (PnlDockEdges *self,
+                                    GParamSpec   *pspec,
+                                    PnlTab       *button)
+{
+  g_assert (PNL_IS_DOCK_EDGES (self));
+  g_assert (pspec != NULL);
+  g_assert (PNL_IS_TAB (button));
+
+
+}
+
 static gboolean
 pnl_dock_edges_minimize (PnlDockItem     *item,
                          PnlDockItem     *child,
@@ -179,6 +193,7 @@ pnl_dock_edges_minimize (PnlDockItem     *item,
   PnlDockEdgesPrivate *priv = pnl_dock_edges_get_instance_private (self);
   GtkContainer *container;
   GtkWidget *button;
+  PnlDockItem *parent;
   gchar *title;
   GtkPositionType edge;
 
@@ -225,7 +240,34 @@ pnl_dock_edges_minimize (PnlDockItem     *item,
                          "visible", TRUE,
                          NULL);
 
+  g_signal_connect_object (button,
+                           "notify::show-preview",
+                           G_CALLBACK (pnl_dock_edges_notify_show_preview),
+                           self,
+                           G_CONNECT_SWAPPED);
+
   gtk_container_add (container, button);
+
+  /* TODO: Reparent the widget here */
+
+  /*
+   * Maybe we should have a PnlDock toplevel class that gets used in applications
+   * and we should just encapsulate everything in there. Then we can do some nasty
+   * APIt things to connect the overlay to the edges without too much trouble.
+   *
+   * But evne so, I don't like how the overlay has single edges. We really need to
+   * be able to have lots of edges that side in/out. So maybe we should just do that
+   * all in this class.
+   */
+
+  g_object_ref (child);
+
+  parent = pnl_dock_item_get_parent (child);
+  pnl_dock_item_release (parent, child);
+  priv->children = g_list_prepend (priv->children, g_object_ref_sink (child));
+  pnl_dock_item_adopt (PNL_DOCK_ITEM (self), child);
+
+  g_object_unref (child);
 
   g_free (title);
 
