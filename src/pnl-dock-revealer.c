@@ -56,7 +56,7 @@ typedef struct
   guint                          child_revealed : 1;
 } PnlDockRevealerPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (PnlDockRevealer, pnl_dock_revealer, GTK_TYPE_BIN)
+G_DEFINE_TYPE_WITH_PRIVATE (PnlDockRevealer, pnl_dock_revealer, PNL_TYPE_BIN)
 
 enum {
   PROP_0,

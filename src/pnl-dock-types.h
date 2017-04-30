@@ -25,6 +25,7 @@
 
 #include <gtk/gtk.h>
 
+#include "pnl-bin.h"
 #include "pnl-multi-paned.h"
 
 G_BEGIN_DECLS
@@ -46,7 +47,7 @@ G_DECLARE_INTERFACE      (PnlDockItem,     pnl_dock_item,     PNL, DOCK_ITEM,   
 G_DECLARE_DERIVABLE_TYPE (PnlDockManager,  pnl_dock_manager,  PNL, DOCK_MANAGER,  GObject)
 G_DECLARE_DERIVABLE_TYPE (PnlDockOverlay,  pnl_dock_overlay,  PNL, DOCK_OVERLAY,  GtkEventBox)
 G_DECLARE_DERIVABLE_TYPE (PnlDockPaned,    pnl_dock_paned,    PNL, DOCK_PANED,    PnlMultiPaned)
-G_DECLARE_DERIVABLE_TYPE (PnlDockRevealer, pnl_dock_revealer, PNL, DOCK_REVEALER, GtkBin)
+G_DECLARE_DERIVABLE_TYPE (PnlDockRevealer, pnl_dock_revealer, PNL, DOCK_REVEALER, PnlBin)
 G_DECLARE_DERIVABLE_TYPE (PnlDockStack,    pnl_dock_stack,    PNL, DOCK_STACK,    GtkBox)
 G_DECLARE_DERIVABLE_TYPE (PnlDockWidget,   pnl_dock_widget,   PNL, DOCK_WIDGET,   GtkBin)
 G_DECLARE_DERIVABLE_TYPE (PnlDockWindow,   pnl_dock_window,   PNL, DOCK_WINDOW,   GtkWindow)
