@@ -28,12 +28,14 @@ headers_DATA = \
 	pnl-tab-strip.h \
 	pnl-tab.h \
 	pnl-version.h \
+	pnl-child-property-action.h \
 	pnl.h \
 	$(NULL)
 
 libpanel_gtk_@API_VERSION@_la_SOURCES = \
 	$(headers_DATA) \
 	pnl-animation.c \
+	pnl-child-property-action.c \
 	pnl-bin.c \
 	pnl-dock-bar.c \
 	pnl-dock-bin-edge-private.h \
