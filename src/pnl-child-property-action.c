@@ -253,6 +253,37 @@ pnl_child_property_action_change_state (GAction  *action,
 }
 
 static void
+pnl_child_property_action_activate (GAction  *action,
+                                    GVariant *parameter)
+{
+  PnlChildPropertyAction *self = (PnlChildPropertyAction *)action;
+
+  g_assert (PNL_IS_CHILD_PROPERTY_ACTION (self));
+
+  if (parameter == NULL &&
+      self->container != NULL &&
+      self->child != NULL &&
+      self->child_property_name != NULL)
+    {
+      GParamSpec *pspec;
+
+      pspec = gtk_container_class_find_child_property (G_OBJECT_GET_CLASS (self->container),
+                                                       self->child_property_name);
+
+      if (G_IS_PARAM_SPEC_BOOLEAN (pspec))
+        {
+          g_autoptr(GVariant) state = pnl_child_property_action_get_state (action);
+          gboolean value = state != NULL && g_variant_get_boolean (state);
+          g_action_change_state (action, g_variant_new_boolean (!value));
+          return;
+        }
+    }
+
+  g_warning ("I don't know how to activate %s",
+             self->name ? self->name : "<unnamed>");
+}
+
+static void
 action_iface_init (GActionInterface *iface)
 {
   iface->get_name = pnl_child_property_action_get_name;
@@ -262,6 +293,7 @@ action_iface_init (GActionInterface *iface)
   iface->get_enabled = pnl_child_property_action_get_enabled;
   iface->get_state = pnl_child_property_action_get_state;
   iface->change_state = pnl_child_property_action_change_state;
+  iface->activate = pnl_child_property_action_activate;
 }
 
 static void
