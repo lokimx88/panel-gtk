@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "pnl-bin.h"
+#include "pnl-util-private.h"
 
 G_DEFINE_TYPE (PnlBin, pnl_bin, GTK_TYPE_BIN)
 
@@ -80,35 +81,11 @@ add_border (GtkBorder       *lsv,
 }
 
 static void
-pnl_bin_compute_borders (PnlBin    *self,
-                         GtkBorder *all_borders)
-{
-  GtkStyleContext *style_contxt;
-  GtkStateFlags flags;
-  GtkBorder tmp;
-
-  style_contxt = gtk_widget_get_style_context (GTK_WIDGET (self));
-  flags = gtk_widget_get_state_flags (GTK_WIDGET (self));
-
-  memset (all_borders, 0, sizeof *all_borders);
-
-  gtk_style_context_get_margin (style_contxt, flags, &tmp);
-  add_border (all_borders, &tmp);
-
-  gtk_style_context_get_border (style_contxt, flags, &tmp);
-  add_border (all_borders, &tmp);
-
-  gtk_style_context_get_padding (style_contxt, flags, &tmp);
-  add_border (all_borders, &tmp);
-}
-
-static void
 pnl_bin_size_allocate (GtkWidget     *widget,
                        GtkAllocation *alloc)
 {
   PnlBin *self = (PnlBin *)widget;
-  GtkBorder all_borders;
-  GtkAllocation child_alloc;
+  GtkAllocation child_alloc = { 0 };
   GtkWidget *child;
 
   g_assert (PNL_IS_BIN (self));
@@ -118,8 +95,10 @@ pnl_bin_size_allocate (GtkWidget     *widget,
 
   if (child != NULL)
     {
-      pnl_bin_compute_borders (self, &all_borders);
+      GtkStyleContext *style_context;
+      GtkBorder borders;
 
+      style_context = gtk_widget_get_style_context (widget);
       child_alloc = *alloc;
 
       if (gtk_widget_get_has_window (widget))
@@ -128,12 +107,8 @@ pnl_bin_size_allocate (GtkWidget     *widget,
           child_alloc.y = 0;
         }
 
-      child_alloc.x += all_borders.left;
-      child_alloc.y += all_borders.top;
-      child_alloc.width -= all_borders.left;
-      child_alloc.width -= all_borders.right;
-      child_alloc.height -= all_borders.top;
-      child_alloc.height -= all_borders.bottom;
+      pnl_gtk_style_context_get_borders (style_context, &borders);
+      pnl_gtk_allocation_subtract_border (&child_alloc, &borders);
     }
 
   GTK_WIDGET_CLASS (pnl_bin_parent_class)->size_allocate (widget, alloc);
@@ -148,8 +123,9 @@ pnl_bin_get_preferred_width (GtkWidget *widget,
                              gint      *nat_width)
 {
   PnlBin *self = (PnlBin *)widget;
+  GtkStyleContext *style_context;
   GtkWidget *child;
-  GtkBorder all_borders;
+  GtkBorder borders;
 
   g_assert (PNL_IS_BIN (widget));
 
@@ -160,13 +136,11 @@ pnl_bin_get_preferred_width (GtkWidget *widget,
   if (child != NULL)
     gtk_widget_get_preferred_width (child, min_width, nat_width);
 
-  pnl_bin_compute_borders (self, &all_borders);
+  style_context = gtk_widget_get_style_context (widget);
+  pnl_gtk_style_context_get_borders (style_context, &borders);
 
-  *min_width += all_borders.left;
-  *min_width += all_borders.right;
-
-  *nat_width += all_borders.left;
-  *nat_width += all_borders.right;
+  *min_width += (borders.left + borders.right);
+  *nat_width += (borders.left + borders.right);
 }
 
 static void
@@ -175,8 +149,9 @@ pnl_bin_get_preferred_height (GtkWidget *widget,
                               gint      *nat_height)
 {
   PnlBin *self = (PnlBin *)widget;
+  GtkStyleContext *style_context;
   GtkWidget *child;
-  GtkBorder all_borders;
+  GtkBorder borders;
 
   g_assert (PNL_IS_BIN (widget));
 
@@ -187,13 +162,11 @@ pnl_bin_get_preferred_height (GtkWidget *widget,
   if (child != NULL)
     gtk_widget_get_preferred_height (child, min_height, nat_height);
 
-  pnl_bin_compute_borders (self, &all_borders);
+  style_context = gtk_widget_get_style_context (widget);
+  pnl_gtk_style_context_get_borders (style_context, &borders);
 
-  *min_height += all_borders.top;
-  *min_height += all_borders.bottom;
-
-  *nat_height += all_borders.top;
-  *nat_height += all_borders.bottom;
+  *min_height += (borders.top + borders.bottom);
+  *nat_height += (borders.top + borders.bottom);
 }
 
 static void

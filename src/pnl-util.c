@@ -32,6 +32,28 @@ pnl_gtk_border_sum (GtkBorder       *one,
   one->left += two->left;
 }
 
+void
+pnl_gtk_style_context_get_borders (GtkStyleContext *style_context,
+                                   GtkBorder       *borders)
+{
+  GtkBorder border = { 0 };
+  GtkBorder padding = { 0 };
+  GtkStateFlags state;
+
+  g_return_if_fail (GTK_IS_STYLE_CONTEXT (style_context));
+  g_return_if_fail (borders != NULL);
+
+  memset (borders, 0, sizeof *borders);
+
+  state = gtk_style_context_get_state (style_context);
+
+  gtk_style_context_get_border (style_context, state, &border);
+  gtk_style_context_get_padding (style_context, state, &padding);
+
+  pnl_gtk_border_sum (borders, &border);
+  pnl_gtk_border_sum (borders, &padding);
+}
+
 gboolean
 pnl_gtk_bin_draw (GtkWidget *widget,
                   cairo_t   *cr)
@@ -318,4 +340,17 @@ pnl_g_action_name_parse (const gchar  *action_name,
                          gchar       **name)
 {
   split_action_name (action_name, prefix, name);
+}
+
+void
+pnl_gtk_allocation_subtract_border (GtkAllocation *alloc,
+                                    GtkBorder     *border)
+{
+  g_return_if_fail (alloc != NULL);
+  g_return_if_fail (border != NULL);
+
+  alloc->x += border->left;
+  alloc->y += border->top;
+  alloc->width -= (border->left + border->right);
+  alloc->height -= (border->top + border->bottom);
 }

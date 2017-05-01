@@ -17,7 +17,10 @@
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#define G_LOG_DOMAIN "pnl-multi-paned"
+
 #include "pnl-multi-paned.h"
+#include "pnl-util-private.h"
 
 #define HANDLE_WIDTH  10
 #define HANDLE_HEIGHT 10
@@ -573,6 +576,8 @@ pnl_multi_paned_get_preferred_height (GtkWidget *widget,
 {
   PnlMultiPaned *self = (PnlMultiPaned *)widget;
   PnlMultiPanedPrivate *priv = pnl_multi_paned_get_instance_private (self);
+  GtkStyleContext *style_context;
+  GtkBorder borders;
   guint i;
   gint real_min_height = 0;
   gint real_nat_height = 0;
@@ -614,6 +619,12 @@ pnl_multi_paned_get_preferred_height (GtkWidget *widget,
 
   *min_height = real_min_height;
   *nat_height = real_nat_height;
+
+  style_context = gtk_widget_get_style_context (widget);
+  pnl_gtk_style_context_get_borders (style_context, &borders);
+
+  *min_height += borders.top + borders.bottom;
+  *nat_height += borders.top + borders.bottom;
 }
 
 static void
@@ -706,6 +717,8 @@ pnl_multi_paned_get_preferred_width (GtkWidget *widget,
 {
   PnlMultiPaned *self = (PnlMultiPaned *)widget;
   PnlMultiPanedPrivate *priv = pnl_multi_paned_get_instance_private (self);
+  GtkStyleContext *style_context;
+  GtkBorder borders;
   guint i;
   gint real_min_width = 0;
   gint real_nat_width = 0;
@@ -747,6 +760,12 @@ pnl_multi_paned_get_preferred_width (GtkWidget *widget,
 
   *min_width = real_min_width;
   *nat_width = real_nat_width;
+
+  style_context = gtk_widget_get_style_context (widget);
+  pnl_gtk_style_context_get_borders (style_context, &borders);
+
+  *min_width += borders.left + borders.right;
+  *nat_width += borders.left + borders.right;
 }
 
 static void
