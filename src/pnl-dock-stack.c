@@ -25,6 +25,8 @@ typedef struct
 {
   GtkStack         *stack;
   PnlTabStrip      *tab_strip;
+  GtkBox           *tab_strip_box;
+  GtkButton        *pinned_button;
   GtkPositionType   edge : 2;
 } PnlDockStackPrivate;
 
@@ -38,6 +40,7 @@ G_DEFINE_TYPE_EXTENDED (PnlDockStack, pnl_dock_stack, GTK_TYPE_BOX, 0,
 enum {
   PROP_0,
   PROP_EDGE,
+  PROP_SHOW_PINNED_BUTTON,
   N_PROPS
 };
 
@@ -95,6 +98,10 @@ pnl_dock_stack_get_property (GObject    *object,
       g_value_set_enum (value, pnl_dock_stack_get_edge (self));
       break;
 
+    case PROP_SHOW_PINNED_BUTTON:
+      g_value_set_boolean (value, pnl_dock_stack_get_show_pinned_button (self));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
@@ -112,6 +119,10 @@ pnl_dock_stack_set_property (GObject      *object,
     {
     case PROP_EDGE:
       pnl_dock_stack_set_edge (self, g_value_get_enum (value));
+      break;
+
+    case PROP_SHOW_PINNED_BUTTON:
+      pnl_dock_stack_set_show_pinned_button (self, g_value_get_boolean (value));
       break;
 
     default:
@@ -141,6 +152,13 @@ pnl_dock_stack_class_init (PnlDockStackClass *klass)
                        GTK_POS_TOP,
                        (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
 
+  properties [PROP_SHOW_PINNED_BUTTON] =
+    g_param_spec_boolean ("show-pinned-button",
+                          "Show Pinned Button",
+                          "Show the pinned button to pin the dock edge",
+                          FALSE,
+                          (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_properties (object_class, N_PROPS, properties);
 
   gtk_widget_class_set_css_name (widget_class, "dockstack");
@@ -161,6 +179,22 @@ pnl_dock_stack_init (PnlDockStack *self)
    *       switch to CROSSFADE just yet.
    */
 
+  priv->tab_strip_box = g_object_new (GTK_TYPE_BOX,
+                                      "orientation", GTK_ORIENTATION_HORIZONTAL,
+                                      "visible", TRUE,
+                                      NULL);
+
+  priv->pinned_button = g_object_new (GTK_TYPE_BUTTON,
+                                      "action-name", "panel.pinned",
+                                      "child", g_object_new (GTK_TYPE_IMAGE,
+                                                             "icon-name", "window-maximize-symbolic",
+                                                             "visible", TRUE,
+                                                             NULL),
+                                      "expand", FALSE,
+                                      "visible", FALSE,
+                                      NULL);
+  gtk_style_context_add_class (gtk_widget_get_style_context (GTK_WIDGET (priv->pinned_button)), "pinned");
+
   priv->stack = g_object_new (GTK_TYPE_STACK,
                               "homogeneous", TRUE,
                               "visible", TRUE,
@@ -173,9 +207,18 @@ pnl_dock_stack_init (PnlDockStack *self)
                                   NULL);
 
   GTK_CONTAINER_CLASS (pnl_dock_stack_parent_class)->add (GTK_CONTAINER (self),
-                                                          GTK_WIDGET (priv->tab_strip));
+                                                          GTK_WIDGET (priv->tab_strip_box));
   GTK_CONTAINER_CLASS (pnl_dock_stack_parent_class)->add (GTK_CONTAINER (self),
                                                           GTK_WIDGET (priv->stack));
+
+  gtk_container_add_with_properties (GTK_CONTAINER (priv->tab_strip_box), GTK_WIDGET (priv->tab_strip),
+                                     "fill", TRUE,
+                                     "expand", TRUE,
+                                     NULL);
+  gtk_container_add_with_properties (GTK_CONTAINER (priv->tab_strip_box), GTK_WIDGET (priv->pinned_button),
+                                     "fill", FALSE,
+                                     "expand", FALSE,
+                                     NULL);
 }
 
 GtkWidget *
@@ -217,7 +260,9 @@ pnl_dock_stack_set_edge (PnlDockStack    *self,
                                           GTK_ORIENTATION_VERTICAL);
           gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip),
                                           GTK_ORIENTATION_HORIZONTAL);
-          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip),
+          gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip_box),
+                                          GTK_ORIENTATION_HORIZONTAL);
+          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip_box),
                                    "position", 0,
                                    NULL);
           break;
@@ -227,7 +272,9 @@ pnl_dock_stack_set_edge (PnlDockStack    *self,
                                           GTK_ORIENTATION_VERTICAL);
           gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip),
                                           GTK_ORIENTATION_HORIZONTAL);
-          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip),
+          gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip_box),
+                                          GTK_ORIENTATION_HORIZONTAL);
+          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip_box),
                                    "position", 1,
                                    NULL);
           break;
@@ -237,7 +284,9 @@ pnl_dock_stack_set_edge (PnlDockStack    *self,
                                           GTK_ORIENTATION_HORIZONTAL);
           gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip),
                                           GTK_ORIENTATION_VERTICAL);
-          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip),
+          gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip_box),
+                                          GTK_ORIENTATION_VERTICAL);
+          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip_box),
                                    "position", 0,
                                    NULL);
           break;
@@ -247,7 +296,9 @@ pnl_dock_stack_set_edge (PnlDockStack    *self,
                                           GTK_ORIENTATION_HORIZONTAL);
           gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip),
                                           GTK_ORIENTATION_VERTICAL);
-          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip),
+          gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip_box),
+                                          GTK_ORIENTATION_VERTICAL);
+          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip_box),
                                    "position", 1,
                                    NULL);
           break;
@@ -349,4 +400,31 @@ pnl_dock_stack_init_dock_item_iface (PnlDockItemInterface *iface)
   iface->set_child_visible = pnl_dock_stack_set_child_visible;
   iface->update_visibility = pnl_dock_stack_update_visibility;
   iface->release = pnl_dock_stack_release;
+}
+
+gboolean
+pnl_dock_stack_get_show_pinned_button (PnlDockStack *self)
+{
+  PnlDockStackPrivate *priv = pnl_dock_stack_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_DOCK_STACK (self), FALSE);
+
+  return gtk_widget_get_visible (GTK_WIDGET (priv->pinned_button));
+}
+
+void
+pnl_dock_stack_set_show_pinned_button (PnlDockStack *self,
+                                       gboolean      show_pinned_button)
+{
+  PnlDockStackPrivate *priv = pnl_dock_stack_get_instance_private (self);
+
+  g_return_if_fail (PNL_IS_DOCK_STACK (self));
+
+  show_pinned_button = !!show_pinned_button;
+
+  if (show_pinned_button != gtk_widget_get_visible (GTK_WIDGET (priv->pinned_button)))
+    {
+      gtk_widget_set_visible (GTK_WIDGET (priv->pinned_button), show_pinned_button);
+      g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_SHOW_PINNED_BUTTON]);
+    }
 }
