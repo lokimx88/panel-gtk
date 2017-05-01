@@ -590,14 +590,18 @@ pnl_dock_revealer_draw (GtkWidget *widget,
   PnlDockRevealer *self = (PnlDockRevealer *)widget;
   PnlDockRevealerPrivate *priv = pnl_dock_revealer_get_instance_private (self);
   GtkAllocation alloc;
-  GtkBorder margin;
   GtkStyleContext *style_context;
   GtkWidget *child;
-  GtkStateFlags state;
 
   g_assert (PNL_IS_DOCK_REVEALER (self));
 
   gtk_widget_get_allocation (widget, &alloc);
+
+  if (gtk_widget_get_has_window (widget))
+    {
+      alloc.x = 0;
+      alloc.y = 0;
+    }
 
   if (priv->animation != NULL)
     {
@@ -607,30 +611,28 @@ pnl_dock_revealer_draw (GtkWidget *widget,
        * will be shown in improper locations.
        */
       if (IS_HORIZONTAL (priv->transition_type))
-        alloc.width = priv->nat_req.width;
+        {
+          if (priv->transition_type == PNL_DOCK_REVEALER_TRANSITION_TYPE_SLIDE_RIGHT)
+            alloc.x -= (priv->nat_req.width - alloc.width);
+          alloc.width = priv->nat_req.width;
+        }
       else
-        alloc.height = priv->nat_req.height;
+        {
+          if (priv->transition_type == PNL_DOCK_REVEALER_TRANSITION_TYPE_SLIDE_DOWN)
+            alloc.y -= (priv->nat_req.height - alloc.height);
+          alloc.height = priv->nat_req.height;
+        }
     }
 
   style_context = gtk_widget_get_style_context (widget);
-  state = gtk_widget_get_state_flags (widget);
-  gtk_style_context_get_margin (style_context, state, &margin);
 
-  gtk_render_background (style_context, cr,
-                         margin.left,
-                         margin.top,
-                         alloc.width - margin.left - margin.right,
-                         alloc.height - margin.top - margin.bottom);
-
-  gtk_render_frame (style_context, cr,
-                    margin.left,
-                    margin.top,
-                    alloc.width - margin.left - margin.right,
-                    alloc.height - margin.top - margin.bottom);
+  gtk_render_background (style_context, cr, alloc.x, alloc.y, alloc.width, alloc.height);
 
   child = gtk_bin_get_child (GTK_BIN (widget));
   if (child != NULL)
     gtk_container_propagate_draw (GTK_CONTAINER (widget), child, cr);
+
+  gtk_render_frame (style_context, cr, alloc.x, alloc.y, alloc.width, alloc.height);
 
   return FALSE;
 }
