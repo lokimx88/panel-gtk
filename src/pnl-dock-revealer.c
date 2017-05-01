@@ -54,6 +54,7 @@ typedef struct
   guint                          position_set : 1;
   guint                          reveal_child : 1;
   guint                          child_revealed : 1;
+  GtkRequisition                 nat_req;
 } PnlDockRevealerPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (PnlDockRevealer, pnl_dock_revealer, PNL_TYPE_BIN)
@@ -394,12 +395,17 @@ pnl_dock_revealer_get_preferred_width (GtkWidget *widget,
 {
   PnlDockRevealer *self = (PnlDockRevealer *)widget;
   PnlDockRevealerPrivate *priv = pnl_dock_revealer_get_instance_private (self);
+  GtkWidget *child;
 
   g_assert (PNL_IS_DOCK_REVEALER (self));
   g_assert (min_width != NULL);
   g_assert (nat_width != NULL);
 
-  pnl_dock_revealer_get_child_preferred_width (self, min_width, nat_width);
+  child = gtk_bin_get_child (GTK_BIN (self));
+
+  GTK_WIDGET_CLASS (pnl_dock_revealer_parent_class)->get_preferred_width (widget, min_width, nat_width);
+
+  priv->nat_req.width = *nat_width;
 
   if (IS_HORIZONTAL (priv->transition_type) && priv->animation != NULL)
     {
@@ -413,6 +419,15 @@ pnl_dock_revealer_get_preferred_width (GtkWidget *widget,
        * Our natural width is adjusted for the in-progress animation.
        */
       *nat_width *= gtk_adjustment_get_value (priv->adjustment);
+    }
+  else if (child != NULL && !gtk_widget_get_child_visible (child))
+    {
+      /*
+       * Make sure we are completely hidden if the child is not currently
+       * visible.
+       */
+      *min_width = 0;
+      *nat_width = 0;
     }
 }
 
@@ -455,12 +470,17 @@ pnl_dock_revealer_get_preferred_height (GtkWidget *widget,
 {
   PnlDockRevealer *self = (PnlDockRevealer *)widget;
   PnlDockRevealerPrivate *priv = pnl_dock_revealer_get_instance_private (self);
+  GtkWidget *child;
 
   g_assert (PNL_IS_DOCK_REVEALER (self));
   g_assert (min_height != NULL);
   g_assert (nat_height != NULL);
 
-  pnl_dock_revealer_get_child_preferred_height (self, min_height, nat_height);
+  child = gtk_bin_get_child (GTK_BIN (self));
+
+  GTK_WIDGET_CLASS (pnl_dock_revealer_parent_class)->get_preferred_height (widget, min_height, nat_height);
+
+  priv->nat_req.height = *nat_height;
 
   if (IS_VERTICAL (priv->transition_type) && priv->animation != NULL)
     {
@@ -475,6 +495,15 @@ pnl_dock_revealer_get_preferred_height (GtkWidget *widget,
        */
       *nat_height *= gtk_adjustment_get_value (priv->adjustment);
     }
+  else if (child != NULL && !gtk_widget_get_child_visible (child))
+    {
+      /*
+       * Make sure we are completely hidden if the child is not currently
+       * visible.
+       */
+      *min_height = 0;
+      *nat_height = 0;
+    }
 }
 
 static void
@@ -486,7 +515,9 @@ pnl_dock_revealer_size_allocate (GtkWidget     *widget,
   GtkAllocation child_allocation;
   GtkRequisition min_req;
   GtkRequisition nat_req;
+  GtkStyleContext *style_context;
   GtkWidget *child;
+  GtkBorder borders;
 
   g_assert (PNL_IS_DOCK_REVEALER (self));
 
@@ -505,10 +536,17 @@ pnl_dock_revealer_size_allocate (GtkWidget     *widget,
   if (!gtk_widget_get_child_visible (child))
     return;
 
-  child_allocation.x = 0;
-  child_allocation.y = 0;
-  child_allocation.width = allocation->width;
-  child_allocation.height = allocation->height;
+  child_allocation = *allocation;
+
+  if (gtk_widget_get_has_window (widget))
+    {
+      child_allocation.x = 0;
+      child_allocation.y = 0;
+    }
+
+  style_context = gtk_widget_get_style_context (widget);
+  pnl_gtk_style_context_get_borders (style_context, &borders);
+  pnl_gtk_allocation_subtract_border (&child_allocation, &borders);
 
   if (IS_HORIZONTAL (priv->transition_type))
     {
@@ -543,6 +581,58 @@ pnl_dock_revealer_add (GtkContainer *container,
   GTK_CONTAINER_CLASS (pnl_dock_revealer_parent_class)->add (container, widget);
 
   gtk_widget_set_child_visible (widget, priv->reveal_child);
+}
+
+static gboolean
+pnl_dock_revealer_draw (GtkWidget *widget,
+                        cairo_t   *cr)
+{
+  PnlDockRevealer *self = (PnlDockRevealer *)widget;
+  PnlDockRevealerPrivate *priv = pnl_dock_revealer_get_instance_private (self);
+  GtkAllocation alloc;
+  GtkBorder margin;
+  GtkStyleContext *style_context;
+  GtkWidget *child;
+  GtkStateFlags state;
+
+  g_assert (PNL_IS_DOCK_REVEALER (self));
+
+  gtk_widget_get_allocation (widget, &alloc);
+
+  if (priv->animation != NULL)
+    {
+      /*
+       * If we are currently animating, we want to ensure that our background
+       * is drawn at the size of the natural allocation. Otherwise borders
+       * will be shown in improper locations.
+       */
+      if (IS_HORIZONTAL (priv->transition_type))
+        alloc.width = priv->nat_req.width;
+      else
+        alloc.height = priv->nat_req.height;
+    }
+
+  style_context = gtk_widget_get_style_context (widget);
+  state = gtk_widget_get_state_flags (widget);
+  gtk_style_context_get_margin (style_context, state, &margin);
+
+  gtk_render_background (style_context, cr,
+                         margin.left,
+                         margin.top,
+                         alloc.width - margin.left - margin.right,
+                         alloc.height - margin.top - margin.bottom);
+
+  gtk_render_frame (style_context, cr,
+                    margin.left,
+                    margin.top,
+                    alloc.width - margin.left - margin.right,
+                    alloc.height - margin.top - margin.bottom);
+
+  child = gtk_bin_get_child (GTK_BIN (widget));
+  if (child != NULL)
+    gtk_container_propagate_draw (GTK_CONTAINER (widget), child, cr);
+
+  return FALSE;
 }
 
 static void
@@ -680,6 +770,7 @@ pnl_dock_revealer_class_init (PnlDockRevealerClass *klass)
   widget_class->get_preferred_height = pnl_dock_revealer_get_preferred_height;
   widget_class->realize = pnl_dock_revealer_realize;
   widget_class->size_allocate = pnl_dock_revealer_size_allocate;
+  widget_class->draw = pnl_dock_revealer_draw;
 
   container_class->add = pnl_dock_revealer_add;
 
