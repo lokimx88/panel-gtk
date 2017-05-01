@@ -64,11 +64,22 @@ tabstrip {
 }
 
 
+dockstack button.pinned {
+  border: none;
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0 6px 0 6px;
+}
+
 
 dockbin {
   border: 1px solid alpha(@borders, 0.75);
   -PnlDockBin-handle-size: 1;
 }
+
+dockbinedge { background-color: @theme_bg_color; }
+dockbinedge.pinned { background-color: transparent; }
 
 dockwidget {
   background-color: transparent;
@@ -115,4 +126,16 @@ dockbar button {
  font-weight: bold;
  font-size: 0.8em;
  outline-offset: 1px;
+}
+
+
+
+
+dockbinedge {
+  border: 5px solid blue;
+  box-shadow: 5px 5px 15px black;
+}
+
+dockbinedge.pinned {
+  box-shadow: none;
 }

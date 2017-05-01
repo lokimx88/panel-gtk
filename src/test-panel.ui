@@ -104,6 +104,7 @@
                 </child>
                 <child type="right">
                   <object class="PnlDockStack">
+                    <property name="show-pinned-button">true</property>
                     <property name="expand">true</property>
                     <property name="visible">true</property>
                     <child>
