@@ -1541,34 +1541,38 @@ pnl_multi_paned_draw (GtkWidget *widget,
       gtk_container_propagate_draw (GTK_CONTAINER (self), child->widget, cr);
     }
 
-  for (i = 0; i < priv->children->len; i++)
+  if (priv->children->len > 0)
     {
-      PnlMultiPanedChild *child = &g_array_index (priv->children, PnlMultiPanedChild, i);
-      GtkAllocation child_alloc;
-
-      if (pnl_multi_paned_is_last_visible_child (self, child))
-        break;
-
-      gtk_widget_get_allocation (child->widget, &child_alloc);
-      gtk_widget_translate_coordinates (child->widget, widget, 0, 0, &child_alloc.x, &child_alloc.y);
-
       gtk_style_context_save (style_context);
       gtk_style_context_add_class (style_context, "handle");
 
-      if (priv->orientation == GTK_ORIENTATION_HORIZONTAL)
-        gtk_render_handle (style_context,
-                           cr,
-                           child_alloc.x + child_alloc.width,
-                           borders.top,
-                           handle_size,
-                           child_alloc.height);
-      else
-        gtk_render_handle (style_context,
-                           cr,
-                           borders.left,
-                           child_alloc.y + child_alloc.height,
-                           child_alloc.width,
-                           handle_size);
+      for (i = 0; i < priv->children->len; i++)
+        {
+          PnlMultiPanedChild *child = &g_array_index (priv->children, PnlMultiPanedChild, i);
+          GtkAllocation child_alloc;
+
+          if (pnl_multi_paned_is_last_visible_child (self, child))
+            break;
+
+          gtk_widget_get_allocation (child->widget, &child_alloc);
+          gtk_widget_translate_coordinates (child->widget, widget, 0, 0, &child_alloc.x, &child_alloc.y);
+
+          if (priv->orientation == GTK_ORIENTATION_HORIZONTAL)
+            gtk_render_handle (style_context,
+                               cr,
+                               child_alloc.x + child_alloc.width,
+                               borders.top,
+                               handle_size,
+                               child_alloc.height);
+          else
+            gtk_render_handle (style_context,
+                               cr,
+                               borders.left,
+                               child_alloc.y + child_alloc.height,
+                               child_alloc.width,
+                               handle_size);
+
+        }
 
       gtk_style_context_restore (style_context);
     }
