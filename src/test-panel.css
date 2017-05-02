@@ -85,10 +85,6 @@ dockwidget {
   background-color: transparent;
 }
 
-dockpaned {
-  border: 1px solid @borders;
-}
-
 tab > * {
   padding: 0 3px 0 3px;
 }
@@ -138,4 +134,12 @@ dockbinedge {
 
 dockbinedge.pinned {
   box-shadow: none;
+}
+
+dockpaned {
+  -PnlMultiPaned-handle-size: 1;
+}
+
+dockpaned .handle {
+  border: 1px solid blue;
 }

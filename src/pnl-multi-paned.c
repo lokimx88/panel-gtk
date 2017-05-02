@@ -1552,6 +1552,9 @@ pnl_multi_paned_draw (GtkWidget *widget,
       gtk_widget_get_allocation (child->widget, &child_alloc);
       gtk_widget_translate_coordinates (child->widget, widget, 0, 0, &child_alloc.x, &child_alloc.y);
 
+      gtk_style_context_save (style_context);
+      gtk_style_context_add_class (style_context, "handle");
+
       if (priv->orientation == GTK_ORIENTATION_HORIZONTAL)
         gtk_render_handle (style_context,
                            cr,
@@ -1566,6 +1569,8 @@ pnl_multi_paned_draw (GtkWidget *widget,
                            child_alloc.y + child_alloc.height,
                            child_alloc.width,
                            handle_size);
+
+      gtk_style_context_restore (style_context);
     }
 
   gtk_render_frame (style_context, cr, alloc.x, alloc.y, alloc.width, alloc.height);
