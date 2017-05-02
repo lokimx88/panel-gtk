@@ -21,7 +21,7 @@ pnldockpaned .handle {
 
 pnldockstack .header {
   padding-top: 2px;
-  background-color: #ffffff;
+  background-color: @content_view_bg;
   color: @theme_fg_color;
   border-bottom: 1px solid mix(@theme_bg_color, @borders, 0.25);
 }
