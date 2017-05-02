@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 
 struct _PnlDockWidgetClass
 {
-  GtkBinClass parent;
+  PnlBinClass parent;
 
   gpointer _reserved1;
   gpointer _reserved2;

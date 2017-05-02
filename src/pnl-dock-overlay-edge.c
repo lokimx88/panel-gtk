@@ -25,12 +25,12 @@
 
 struct _PnlDockOverlayEdge
 {
-  GtkBin          parent;
+  PnlBin          parent;
   GtkPositionType edge : 2;
   gint            position;
 };
 
-G_DEFINE_TYPE_EXTENDED (PnlDockOverlayEdge, pnl_dock_overlay_edge, GTK_TYPE_BIN, 0,
+G_DEFINE_TYPE_EXTENDED (PnlDockOverlayEdge, pnl_dock_overlay_edge, PNL_TYPE_BIN, 0,
                         G_IMPLEMENT_INTERFACE (PNL_TYPE_DOCK_ITEM, NULL))
 
 enum {
@@ -188,9 +188,6 @@ pnl_dock_overlay_edge_class_init (PnlDockOverlayEdgeClass *klass)
   object_class->set_property = pnl_dock_overlay_edge_set_property;
 
   container_class->add = pnl_dock_overlay_edge_add;
-
-  widget_class->draw = pnl_gtk_bin_draw;
-  widget_class->size_allocate = pnl_gtk_bin_size_allocate;
 
   properties [PROP_EDGE] =
     g_param_spec_enum ("edge",

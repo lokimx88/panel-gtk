@@ -21,11 +21,13 @@
 
 #include <gtk/gtk.h>
 
+#include "pnl-bin.h"
+
 G_BEGIN_DECLS
 
 #define PNL_TYPE_DOCK_OVERLAY_EDGE (pnl_dock_overlay_edge_get_type())
 
-G_DECLARE_FINAL_TYPE (PnlDockOverlayEdge, pnl_dock_overlay_edge, PNL, DOCK_OVERLAY_EDGE, GtkBin)
+G_DECLARE_FINAL_TYPE (PnlDockOverlayEdge, pnl_dock_overlay_edge, PNL, DOCK_OVERLAY_EDGE, PnlBin)
 
 GtkPositionType pnl_dock_overlay_edge_get_edge     (PnlDockOverlayEdge *self);
 void            pnl_dock_overlay_edge_set_edge     (PnlDockOverlayEdge *self,

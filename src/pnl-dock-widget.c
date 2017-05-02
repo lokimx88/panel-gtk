@@ -28,7 +28,7 @@ typedef struct
 
 static void dock_item_iface_init (PnlDockItemInterface *iface);
 
-G_DEFINE_TYPE_EXTENDED (PnlDockWidget, pnl_dock_widget, GTK_TYPE_BIN, 0,
+G_DEFINE_TYPE_EXTENDED (PnlDockWidget, pnl_dock_widget, PNL_TYPE_BIN, 0,
                         G_ADD_PRIVATE (PnlDockWidget)
                         G_IMPLEMENT_INTERFACE (PNL_TYPE_DOCK_ITEM, dock_item_iface_init))
 
@@ -161,9 +161,7 @@ pnl_dock_widget_class_init (PnlDockWidgetClass *klass)
   object_class->get_property = pnl_dock_widget_get_property;
   object_class->set_property = pnl_dock_widget_set_property;
 
-  widget_class->draw = pnl_gtk_bin_draw;
   widget_class->grab_focus = pnl_dock_widget_grab_focus;
-  widget_class->size_allocate = pnl_gtk_bin_size_allocate;
 
   properties [PROP_CAN_CLOSE] =
     g_param_spec_boolean ("can-close",
