@@ -1,0 +1,61 @@
+pnldockbinedge {
+  border-color: @borders;
+  border-style: solid;
+}
+
+pnldockbinedge.right {
+  border-left-width: 1px;
+}
+
+pnldockbinedge.left {
+  border-right-width: 1px;
+}
+
+pnldockbinedge.bottom {
+  border-top-width: 1px;
+}
+
+pnldockpaned .handle {
+  border: 1px solid @borders;
+}
+
+pnldockstack .header {
+  padding-top: 2px;
+  background-color: #ffffff;
+  color: @theme_fg_color;
+  border-bottom: 1px solid mix(@theme_bg_color, @borders, 0.25);
+}
+
+pnldockstack .header pnltabstrip pnltab {
+  border-bottom: 3px;
+  border-bottom-style: solid;
+  border-bottom-color: transparent;
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+pnltab {
+  transition-duration: 200ms;
+}
+
+pnldockstack .header button.controls,
+pnldockstack .header pnltabstrip pnltab button {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
+pnldockstack .header pnltabstrip pnltab:active {
+  border-bottom-color: @theme_selected_bg_color;
+}
+
+pnldockstack .header pnltabstrip pnltab:hover {
+  border-bottom-color: mix(@borders, @theme_bg_color, 0.25);
+}
+
+pnldockstack .header pnltabstrip pnltab:hover:checked,
+pnldockstack .header pnltabstrip pnltab:checked {
+  border-bottom-color: @theme_selected_bg_color;
+}
