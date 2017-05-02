@@ -154,13 +154,17 @@ main (gint   argc,
   GtkWidget *dockoverlay;
   GtkCssProvider *provider;
   GError *error = NULL;
+  const gchar *stylesheet = "test-panel.css";
 
   gtk_init (&argc, &argv);
+
+  if (argc > 1 && g_file_test (argv[1], G_FILE_TEST_IS_REGULAR))
+    stylesheet = argv[1];
 
   timer = g_timer_new ();
 
   provider = gtk_css_provider_new ();
-  gtk_css_provider_load_from_path (provider, "test-panel.css", &error);
+  gtk_css_provider_load_from_path (provider, stylesheet, &error);
   g_assert_no_error (error);
   gtk_style_context_add_provider_for_screen (gdk_screen_get_default (),
                                              GTK_STYLE_PROVIDER (provider),
