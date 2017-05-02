@@ -16,10 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define G_LOG_DOMAIN "pnl-dock-stack"
+
 #include "pnl-dock-item.h"
 #include "pnl-dock-stack.h"
 #include "pnl-dock-widget.h"
 #include "pnl-dock-tab-strip.h"
+#include "pnl-util-private.h"
 
 typedef struct
 {
@@ -183,6 +186,7 @@ pnl_dock_stack_init (PnlDockStack *self)
                                       "orientation", GTK_ORIENTATION_HORIZONTAL,
                                       "visible", TRUE,
                                       NULL);
+  pnl_gtk_widget_add_class (GTK_WIDGET (priv->tab_strip_box), "header");
 
   priv->pinned_button = g_object_new (GTK_TYPE_BUTTON,
                                       "action-name", "panel.pinned",
@@ -193,7 +197,7 @@ pnl_dock_stack_init (PnlDockStack *self)
                                       "expand", FALSE,
                                       "visible", FALSE,
                                       NULL);
-  gtk_style_context_add_class (gtk_widget_get_style_context (GTK_WIDGET (priv->pinned_button)), "pinned");
+  pnl_gtk_widget_add_class (GTK_WIDGET (priv->pinned_button), "controls");
 
   priv->stack = g_object_new (GTK_TYPE_STACK,
                               "homogeneous", TRUE,
