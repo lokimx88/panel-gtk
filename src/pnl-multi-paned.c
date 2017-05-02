@@ -1504,7 +1504,9 @@ pnl_multi_paned_draw (GtkWidget *widget,
   PnlMultiPanedPrivate *priv = pnl_multi_paned_get_instance_private (self);
   GtkStyleContext *style_context;
   GtkAllocation alloc;
+  GtkBorder margin;
   GtkBorder borders;
+  GtkStateFlags state;
   gint handle_size = 1;
   guint i;
 
@@ -1517,7 +1519,12 @@ pnl_multi_paned_draw (GtkWidget *widget,
   alloc.y = 0;
 
   style_context = gtk_widget_get_style_context (widget);
+  state = gtk_style_context_get_state (style_context);
+
   pnl_gtk_style_context_get_borders (style_context, &borders);
+
+  gtk_style_context_get_margin (style_context, state, &margin);
+  pnl_gtk_allocation_subtract_border (&alloc, &margin);
 
   gtk_render_background (style_context, cr, alloc.x, alloc.y, alloc.width, alloc.height);
 

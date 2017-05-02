@@ -38,6 +38,7 @@ pnl_gtk_style_context_get_borders (GtkStyleContext *style_context,
 {
   GtkBorder border = { 0 };
   GtkBorder padding = { 0 };
+  GtkBorder margin = { 0 };
   GtkStateFlags state;
 
   g_return_if_fail (GTK_IS_STYLE_CONTEXT (style_context));
@@ -49,9 +50,11 @@ pnl_gtk_style_context_get_borders (GtkStyleContext *style_context,
 
   gtk_style_context_get_border (style_context, state, &border);
   gtk_style_context_get_padding (style_context, state, &padding);
+  gtk_style_context_get_margin (style_context, state, &margin);
 
-  pnl_gtk_border_sum (borders, &border);
   pnl_gtk_border_sum (borders, &padding);
+  pnl_gtk_border_sum (borders, &border);
+  pnl_gtk_border_sum (borders, &margin);
 }
 
 gboolean
