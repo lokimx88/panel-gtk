@@ -277,3 +277,10 @@ pnl_gtk_allocation_subtract_border (GtkAllocation *alloc,
   alloc->width -= (border->left + border->right);
   alloc->height -= (border->top + border->bottom);
 }
+
+void
+pnl_gtk_widget_add_class (GtkWidget   *widget,
+                          const gchar *class_name)
+{
+  gtk_style_context_add_class (gtk_widget_get_style_context (widget), class_name);
+}

@@ -29,6 +29,8 @@ G_BEGIN_DECLS
 #define pnl_set_weak_pointer(ptr,obj) \
   ((obj!=*(ptr))?(pnl_clear_weak_pointer(ptr),*(ptr)=obj,((obj)?g_object_add_weak_pointer((GObject*)obj,(gpointer*)ptr),NULL:NULL),1):0)
 
+void          pnl_gtk_widget_add_class             (GtkWidget        *widget,
+                                                    const gchar      *class_name);
 gboolean      pnl_gtk_widget_activate_action       (GtkWidget        *widget,
                                                     const gchar      *full_action_name,
                                                     GVariant         *variant);
