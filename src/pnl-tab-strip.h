@@ -24,13 +24,9 @@
 #ifndef PNL_TAB_STRIP_H
 #define PNL_TAB_STRIP_H
 
-#include <gtk/gtk.h>
+#include "pnl-dock-types.h"
 
 G_BEGIN_DECLS
-
-#define PNL_TYPE_TAB_STRIP (pnl_tab_strip_get_type())
-
-G_DECLARE_DERIVABLE_TYPE (PnlTabStrip, pnl_tab_strip, PNL, TAB_STRIP, GtkBox)
 
 struct _PnlTabStripClass
 {
@@ -56,6 +52,9 @@ void             pnl_tab_strip_set_edge        (PnlTabStrip     *self,
 gboolean         pnl_tab_strip_get_show_labels (PnlTabStrip     *self);
 void             pnl_tab_strip_set_show_labels (PnlTabStrip     *self,
                                                 gboolean         show_labels);
+PnlTabStyle      pnl_tab_strip_get_style       (PnlTabStrip     *self);
+void             pnl_tab_strip_set_style       (PnlTabStrip     *self,
+                                                PnlTabStyle      style);
 
 G_END_DECLS
 

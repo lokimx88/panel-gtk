@@ -50,8 +50,6 @@ libpanel_gtk_@API_VERSION@_la_SOURCES = \
 	pnl-dock-paned.c \
 	pnl-dock-revealer.c \
 	pnl-dock-stack.c \
-	pnl-dock-tab-strip.c \
-	pnl-dock-tab-strip.h \
 	pnl-dock-transient-grab.c \
 	pnl-dock-transient-grab.h \
 	pnl-dock-widget.c \

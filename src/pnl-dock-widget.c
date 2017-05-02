@@ -181,6 +181,13 @@ pnl_dock_widget_class_init (PnlDockWidgetClass *klass)
                           FALSE,
                           (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
 
+  properties [PROP_ICON_NAME] =
+    g_param_spec_string ("icon-name",
+                         "Icon Name",
+                         "Icon Name",
+                         NULL,
+                         (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
   properties [PROP_MANAGER] =
     g_param_spec_object ("manager",
                          "Manager",

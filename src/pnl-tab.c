@@ -48,6 +48,9 @@ typedef struct
   /* If we are currently activating */
   guint in_activate : 1;
 
+  /* Our icon/text style */
+  PnlTabStyle style : 2;
+
   /* The action name to change the current tab */
   gchar *action_name;
 
@@ -70,6 +73,7 @@ typedef struct
    * orientation/edge of the tabs.
    */
   GtkBox *box;
+  GtkImage *image;
   GtkLabel *title;
   GtkWidget *close;
   GtkWidget *minimize;
@@ -93,6 +97,7 @@ enum {
   PROP_ACTIVE,
   PROP_CAN_CLOSE,
   PROP_EDGE,
+  PROP_STYLE,
   PROP_TITLE,
   PROP_WIDGET,
   N_PROPS,
@@ -629,6 +634,10 @@ pnl_tab_get_property (GObject    *object,
       g_value_set_enum (value, pnl_tab_get_edge (self));
       break;
 
+    case PROP_STYLE:
+      g_value_set_flags (value, pnl_tab_get_style (self));
+      break;
+
     case PROP_TITLE:
       g_value_set_string (value, pnl_tab_get_title (self));
       break;
@@ -675,6 +684,10 @@ pnl_tab_set_property (GObject      *object,
 
     case PROP_EDGE:
       pnl_tab_set_edge (self, g_value_get_enum (value));
+      break;
+
+    case PROP_STYLE:
+      pnl_tab_set_style (self, g_value_get_flags (value));
       break;
 
     case PROP_TITLE:
@@ -736,6 +749,14 @@ pnl_tab_class_init (PnlTabClass *klass)
                        GTK_POS_TOP,
                        (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
 
+  properties [PROP_STYLE] =
+    g_param_spec_flags ("style",
+                        "Style",
+                        "The style for the tab",
+                        PNL_TYPE_TAB_STYLE,
+                        PNL_TAB_BOTH,
+                        (G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS));
+
   properties [PROP_TITLE] =
     g_param_spec_string ("title",
                          "Title",
@@ -764,7 +785,9 @@ static void
 pnl_tab_init (PnlTab *self)
 {
   PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+  GtkBox *center;
 
+  priv->style = PNL_TAB_BOTH;
   priv->edge = GTK_POS_TOP;
 
   gtk_widget_set_has_window (GTK_WIDGET (self), TRUE);
@@ -785,13 +808,25 @@ pnl_tab_init (PnlTab *self)
   g_signal_connect (priv->box, "destroy", G_CALLBACK (gtk_widget_destroyed), &priv->box);
   gtk_container_add (GTK_CONTAINER (self), GTK_WIDGET (priv->box));
 
+  center = g_object_new (GTK_TYPE_BOX,
+                         "spacing", 6,
+                         "visible", TRUE,
+                         NULL);
+  gtk_box_set_center_widget (priv->box, GTK_WIDGET (center));
+
+  priv->image = g_object_new (GTK_TYPE_IMAGE,
+                              "visible", TRUE,
+                              NULL);
+  g_signal_connect (priv->image, "destroy", G_CALLBACK (gtk_widget_destroyed), &priv->image);
+  gtk_box_pack_start (center, GTK_WIDGET (priv->image), FALSE, FALSE, 0);
+
   priv->title = g_object_new (GTK_TYPE_LABEL,
                               "ellipsize", PANGO_ELLIPSIZE_END,
                               "use-underline", TRUE,
                               "visible", TRUE,
                               NULL);
   g_signal_connect (priv->title, "destroy", G_CALLBACK (gtk_widget_destroyed), &priv->title);
-  gtk_box_set_center_widget (priv->box, GTK_WIDGET (priv->title));
+  gtk_box_pack_start (center, GTK_WIDGET (priv->title), FALSE, FALSE, 0);
 
   priv->close = g_object_new (GTK_TYPE_BUTTON,
                               "halign", GTK_ALIGN_END,
@@ -846,6 +881,30 @@ pnl_tab_set_title (PnlTab      *self,
   g_return_if_fail (PNL_IS_TAB (self));
 
   gtk_label_set_label (priv->title, title);
+}
+
+const gchar *
+pnl_tab_get_icon_name (PnlTab *self)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+  const gchar *ret = NULL;
+
+  g_return_val_if_fail (PNL_IS_TAB (self), NULL);
+
+  gtk_image_get_icon_name (priv->image, &ret, NULL);
+
+  return ret;
+}
+
+void
+pnl_tab_set_icon_name (PnlTab      *self,
+                       const gchar *icon_name)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_if_fail (PNL_IS_TAB (self));
+
+  g_object_set (priv->image, "icon-name", icon_name, NULL);
 }
 
 GtkPositionType
@@ -1026,4 +1085,53 @@ actionable_iface_init (GtkActionableInterface *iface)
   iface->set_action_name = pnl_tab_set_action_name;
   iface->get_action_target_value = pnl_tab_get_action_target_value;
   iface->set_action_target_value = pnl_tab_set_action_target_value;
+}
+
+PnlTabStyle
+pnl_tab_get_style (PnlTab *self)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_TAB (self), 0);
+
+  return priv->style;
+}
+
+void
+pnl_tab_set_style (PnlTab      *self,
+                   PnlTabStyle  style)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+
+  g_return_if_fail (PNL_IS_TAB (self));
+
+  if (style != priv->style)
+    {
+      priv->style = style;
+      gtk_widget_set_visible (GTK_WIDGET (priv->image), !!(priv->style & PNL_TAB_ICONS));
+      gtk_widget_set_visible (GTK_WIDGET (priv->title), !!(priv->style & PNL_TAB_TEXT));
+      g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_STYLE]);
+    }
+}
+
+GType
+pnl_tab_style_get_type (void)
+{
+  static GType type_id;
+
+  if (g_once_init_enter (&type_id))
+    {
+      GType _type_id;
+      static const GFlagsValue values[] = {
+        { PNL_TAB_ICONS, "PNL_TAB_ICONS", "icons" },
+        { PNL_TAB_TEXT, "PNL_TAB_TEXT", "text" },
+        { PNL_TAB_BOTH, "PNL_TAB_BOTH", "both" },
+        { 0 }
+      };
+
+      _type_id = g_flags_register_static ("PnlTabStyle", values);
+      g_once_init_leave (&type_id, _type_id);
+    }
+
+  return type_id;
 }
