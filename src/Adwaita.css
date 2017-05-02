@@ -1,4 +1,5 @@
 pnldockbinedge {
+  background-color: @content_view_bg;
   border-color: @borders;
   border-style: solid;
 }
