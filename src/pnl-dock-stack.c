@@ -112,6 +112,10 @@ pnl_dock_stack_get_property (GObject    *object,
       g_value_set_boolean (value, pnl_dock_stack_get_show_pinned_button (self));
       break;
 
+    case PROP_STYLE:
+      g_value_set_flags (value, pnl_dock_stack_get_style (self));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
