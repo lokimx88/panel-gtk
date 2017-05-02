@@ -153,15 +153,8 @@ enum {
   N_CHILD_PROPS
 };
 
-enum {
-  STYLE_PROP_0,
-  STYLE_PROP_HANDLE_SIZE,
-  N_STYLE_PROPS
-};
-
 static GParamSpec *properties [N_PROPS];
 static GParamSpec *child_properties [N_CHILD_PROPS];
-static GParamSpec *style_properties [N_STYLE_PROPS];
 
 static GAction *
 pnl_dock_bin_get_action_for_type (PnlDockBin          *self,
@@ -1809,16 +1802,6 @@ pnl_dock_bin_class_init (PnlDockBinClass *klass)
                       (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gtk_container_class_install_child_properties (container_class, N_CHILD_PROPS, child_properties);
-
-  style_properties [STYLE_PROP_HANDLE_SIZE] =
-    g_param_spec_int ("handle-size",
-                      "Handle Size",
-                      "Width of the resize handle",
-                      0,
-                      G_MAXINT,
-                      1,
-                      (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  gtk_widget_class_install_style_property (widget_class, style_properties [STYLE_PROP_HANDLE_SIZE]);
 
   gtk_widget_class_set_css_name (widget_class, "pnldockbin");
 }
