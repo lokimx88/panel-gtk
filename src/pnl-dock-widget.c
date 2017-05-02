@@ -186,7 +186,7 @@ pnl_dock_widget_class_init (PnlDockWidgetClass *klass)
 
   g_object_class_install_properties (object_class, N_PROPS, properties);
 
-  gtk_widget_class_set_css_name (widget_class, "dockwidget");
+  gtk_widget_class_set_css_name (widget_class, "pnldockwidget");
 }
 
 static void

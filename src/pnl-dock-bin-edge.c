@@ -246,7 +246,7 @@ pnl_dock_bin_edge_class_init (PnlDockBinEdgeClass *klass)
   binding_set = gtk_binding_set_by_class (klass);
   gtk_binding_entry_add_signal (binding_set, GDK_KEY_Escape, 0, "move-to-bin-child", 0);
 
-  gtk_widget_class_set_css_name (widget_class, "dockbinedge");
+  gtk_widget_class_set_css_name (widget_class, "pnldockbinedge");
 }
 
 static void

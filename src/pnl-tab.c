@@ -709,7 +709,7 @@ pnl_tab_class_init (PnlTabClass *klass)
   widget_class->size_allocate = pnl_tab_size_allocate;
   widget_class->hierarchy_changed = pnl_tab_hierarchy_changed;
 
-  gtk_widget_class_set_css_name (widget_class, "tab");
+  gtk_widget_class_set_css_name (widget_class, "pnltab");
 
   g_object_class_override_property (object_class, PROP_ACTION_NAME, "action-name");
   g_object_class_override_property (object_class, PROP_ACTION_TARGET, "action-target");

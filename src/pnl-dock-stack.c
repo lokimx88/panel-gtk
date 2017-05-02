@@ -161,7 +161,7 @@ pnl_dock_stack_class_init (PnlDockStackClass *klass)
 
   g_object_class_install_properties (object_class, N_PROPS, properties);
 
-  gtk_widget_class_set_css_name (widget_class, "dockstack");
+  gtk_widget_class_set_css_name (widget_class, "pnldockstack");
 }
 
 static void

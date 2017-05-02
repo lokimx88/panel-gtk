@@ -1914,7 +1914,7 @@ pnl_multi_paned_class_init (PnlMultiPanedClass *klass)
   klass->resize_drag_begin = pnl_multi_paned_resize_drag_begin;
   klass->resize_drag_end = pnl_multi_paned_resize_drag_end;
 
-  gtk_widget_class_set_css_name (widget_class, "multipaned");
+  gtk_widget_class_set_css_name (widget_class, "pnlmultipaned");
 
   properties [PROP_ORIENTATION] =
     g_param_spec_enum ("orientation",

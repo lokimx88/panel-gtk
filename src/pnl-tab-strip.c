@@ -229,7 +229,7 @@ pnl_tab_strip_class_init (PnlTabStripClass *klass)
 
   g_object_class_install_properties (object_class, N_PROPS, properties);
 
-  gtk_widget_class_set_css_name (widget_class, "tabstrip");
+  gtk_widget_class_set_css_name (widget_class, "pnltabstrip");
 }
 
 static void

@@ -1,4 +1,4 @@
-tab {
+pnltab {
   background-image: none;
   background-color: transparent;
   border-style: solid;
@@ -8,24 +8,24 @@ tab {
   transition-timing-function: ease;
 }
 
-tab:hover:checked,
-tab:checked {
+pnltab:hover:checked,
+pnltab:checked {
   border-color: transparent;
   border-bottom-color: @theme_selected_bg_color;
 }
 
-tab:hover {
+pnltab:hover {
   border-color: transparent;
   border-bottom-color: @borders;
 }
 
-tab label {
+pnltab label {
   color: @theme_fg_color;
   font-size: 0.7em;
   font-weight: bold;
 }
 
-tab button {
+pnltab button {
   border: none;
   color: transparent;
   padding: 0;
@@ -34,37 +34,37 @@ tab button {
   box-shadow: none;
 }
 
-tab button:hover,
-tab button:checked,
-tab:hover button,
-tab:checked button {
+pnltab button:hover,
+pnltab button:checked,
+pnltab:hover button,
+pnltab:checked button {
   color: alpha(@theme_fg_color, 0.55);
 }
 
-tab button:checked:active,
-tab button:hover:active {
+pnltab button:checked:active,
+pnltab button:hover:active {
   color: alpha(@theme_fg_color, 0.65);
 }
 
 
-tabstrip.left tab:checked {
+pnltabstrip.left pnltab:checked {
   border-color: transparent;
   border-left-color: @theme_selected_bg_color;
 }
 
-tabstrip.right tab:checked {
+pnltabstrip.right pnltab:checked {
   border-color: transparent;
   border-right-color: @theme_selected_bg_color;
 }
 
-tabstrip {
+pnltabstrip {
   background-color: @theme_bg_color;
   padding-top: 3px;
   border-bottom: 1px solid @borders;
 }
 
 
-dockstack button.pinned {
+pnldockstack button.pinned {
   border: none;
   background: none;
   box-shadow: none;
@@ -73,36 +73,36 @@ dockstack button.pinned {
 }
 
 
-dockbin {
+pnldockbin {
   border: 1px solid alpha(@borders, 0.75);
   -PnlDockBin-handle-size: 1;
 }
 
-dockbinedge { background-color: @theme_bg_color; }
-dockbinedge.pinned { background-color: transparent; }
+pnldockbinedge { background-color: @theme_bg_color; }
+pnldockbinedge.pinned { background-color: transparent; }
 
-dockwidget {
+pnldockwidget {
   background-color: transparent;
 }
 
-tab > * {
+pnltab > * {
   padding: 0 3px 0 3px;
 }
 
 
-dockoverlayedge {
+pnldockoverlayedge {
   background-color: @theme_bg_color;
 }
-dockoverlayedge.top tabstrip tab:checked {
+pnldockoverlayedge.top pnltabstrip pnltab:checked {
   border-bottom-color: @theme_selected_bg_color;
 }
-dockoverlayedge.left tabstrip tab:checked {
+pnldockoverlayedge.left pnltabstrip pnltab:checked {
   border-right-color: @theme_selected_bg_color;
 }
-dockoverlayedge.right tabstrip tab:checked {
+pnldockoverlayedge.right pnltabstrip pnltab:checked {
   border-left-color: @theme_selected_bg_color;
 }
-dockoverlayedge.bottom tabstrip tab:checked {
+pnldockoverlayedge.bottom pnltabstrip pnltab:checked {
   border-top-color: @theme_selected_bg_color;
   background: blue;
 }
@@ -113,7 +113,7 @@ textview {
 }
 
 
-dockbar button {
+pnldockbar button {
  border: none;
  background: transparent;
  box-shadow: none;
@@ -127,19 +127,19 @@ dockbar button {
 
 
 
-dockbinedge {
+pnldockbinedge {
   border: 5px solid blue;
   box-shadow: 5px 5px 15px black;
 }
 
-dockbinedge.pinned {
+pnldockbinedge.pinned {
   box-shadow: none;
 }
 
-dockpaned {
+pnldockpaned {
   -PnlMultiPaned-handle-size: 1;
 }
 
-dockpaned .handle {
+pnldockpaned .handle {
   border: 1px solid blue;
 }

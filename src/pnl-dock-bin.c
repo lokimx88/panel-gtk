@@ -1820,7 +1820,7 @@ pnl_dock_bin_class_init (PnlDockBinClass *klass)
                       (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   gtk_widget_class_install_style_property (widget_class, style_properties [STYLE_PROP_HANDLE_SIZE]);
 
-  gtk_widget_class_set_css_name (widget_class, "dockbin");
+  gtk_widget_class_set_css_name (widget_class, "pnldockbin");
 }
 
 static void

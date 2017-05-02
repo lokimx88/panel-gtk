@@ -232,7 +232,7 @@ pnl_dock_overlay_edge_class_init (PnlDockOverlayEdgeClass *klass)
   gtk_widget_class_install_style_property (widget_class,
                                            style_properties [STYLE_PROP_OVERLAP_SIZE]);
 
-  gtk_widget_class_set_css_name (widget_class, "dockoverlayedge");
+  gtk_widget_class_set_css_name (widget_class, "pnldockoverlayedge");
 }
 
 static void

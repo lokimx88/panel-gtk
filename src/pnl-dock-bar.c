@@ -186,7 +186,7 @@ pnl_dock_bar_class_init (PnlDockBarClass *klass)
 
   g_object_class_install_properties (object_class, N_PROPS, properties);
 
-  gtk_widget_class_set_css_name (widget_class, "dockbar");
+  gtk_widget_class_set_css_name (widget_class, "pnldockbar");
 }
 
 static void
