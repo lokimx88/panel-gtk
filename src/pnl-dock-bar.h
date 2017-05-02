@@ -19,16 +19,9 @@
 #ifndef PNL_DOCK_BAR_H
 #define PNL_DOCK_BAR_H
 
-#include <gtk/gtk.h>
-
-#include "pnl-bin.h"
-#include "pnl-dock-item.h"
+#include "pnl-dock-types.h"
 
 G_BEGIN_DECLS
-
-#define PNL_TYPE_DOCK_BAR (pnl_dock_bar_get_type())
-
-G_DECLARE_DERIVABLE_TYPE (PnlDockBar, pnl_dock_bar, PNL, DOCK_BAR, PnlBin)
 
 struct _PnlDockBarClass
 {

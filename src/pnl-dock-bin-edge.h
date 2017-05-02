@@ -19,13 +19,9 @@
 #ifndef PNL_DOCK_BIN_EDGE_H
 #define PNL_DOCK_BIN_EDGE_H
 
-#include "pnl-dock-revealer.h"
+#include "pnl-dock-types.h"
 
 G_BEGIN_DECLS
-
-#define PNL_TYPE_DOCK_BIN_EDGE (pnl_dock_bin_edge_get_type())
-
-G_DECLARE_DERIVABLE_TYPE (PnlDockBinEdge, pnl_dock_bin_edge, PNL, DOCK_BIN_EDGE, PnlDockRevealer)
 
 struct _PnlDockBinEdgeClass
 {

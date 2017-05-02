@@ -19,13 +19,9 @@
 #ifndef PNL_DOCK_TAB_STRIP_H
 #define PNL_DOCK_TAB_STRIP_H
 
-#include "pnl-tab-strip.h"
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
-
-#define PNL_TYPE_DOCK_TAB_STRIP (pnl_dock_tab_strip_get_type())
-
-G_DECLARE_FINAL_TYPE (PnlDockTabStrip, pnl_dock_tab_strip, PNL, DOCK_TAB_STRIP, PnlTabStrip)
 
 GtkWidget *pnl_dock_tab_strip_new (void);
 

@@ -23,11 +23,14 @@
 #ifndef PNL_DOCK_REVEALER_H
 #define PNL_DOCK_REVEALER_H
 
-#include "pnl-dock-types.h"
+#include "pnl-bin.h"
 
 G_BEGIN_DECLS
 
 #define PNL_TYPE_DOCK_REVEALER_TRANSITION_TYPE (pnl_dock_revealer_transition_type_get_type())
+#define PNL_TYPE_DOCK_REVEALER                 (pnl_dock_revealer_get_type())
+
+G_DECLARE_DERIVABLE_TYPE (PnlDockRevealer, pnl_dock_revealer, PNL, DOCK_REVEALER, PnlBin)
 
 typedef enum
 {

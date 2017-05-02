@@ -16,16 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "pnl-dock-types.h"
 #include "pnl-dock-tab-strip.h"
+#include "pnl-tab-strip.h"
 
 struct _PnlDockTabStrip
 {
   PnlTabStrip parent;
-};
-
-enum {
-  PROP_0,
-  N_PROPS
 };
 
 G_DEFINE_TYPE (PnlDockTabStrip, pnl_dock_tab_strip, PNL_TYPE_TAB_STRIP)

@@ -24,15 +24,9 @@
 #ifndef PNL_TAB_H
 #define PNL_TAB_H
 
-#include <gtk/gtk.h>
-
-#include "pnl-bin.h"
+#include "pnl-dock-types.h"
 
 G_BEGIN_DECLS
-
-#define PNL_TYPE_TAB (pnl_tab_get_type())
-
-G_DECLARE_FINAL_TYPE (PnlTab, pnl_tab, PNL, TAB, PnlBin)
 
 const gchar     *pnl_tab_get_title     (PnlTab          *self);
 void             pnl_tab_set_title     (PnlTab          *self,

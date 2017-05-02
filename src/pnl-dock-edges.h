@@ -19,13 +19,9 @@
 #ifndef PNL_DOCK_EDGES_H
 #define PNL_DOCK_EDGES_H
 
-#include <gtk/gtk.h>
+#include "pnl-dock-types.h"
 
 G_BEGIN_DECLS
-
-#define PNL_TYPE_DOCK_EDGES (pnl_dock_edges_get_type())
-
-G_DECLARE_DERIVABLE_TYPE (PnlDockEdges, pnl_dock_edges, PNL, DOCK_EDGES, GtkGrid)
 
 struct _PnlDockEdgesClass
 {
