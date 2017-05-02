@@ -551,12 +551,11 @@ pnl_dock_item_minimize (PnlDockItem     *self,
  *
  * Gets the title for the #PnlDockItem.
  *
- * Generally, you want to use a #PnlDockWidget which has a
- * "title" property you can set. But this can be helpful
- * for integration of various container widgets.
+ * Generally, you want to use a #PnlDockWidget which has a "title" property you
+ * can set. But this can be helpful for integration of various container
+ * widgets.
  *
- * Returns: (transfer full) (nullable): A newly allocated
- *   string or %NULL.
+ * Returns: (transfer full) (nullable): A newly allocated string or %NULL.
  */
 gchar *
 pnl_dock_item_get_title (PnlDockItem *self)
@@ -565,6 +564,29 @@ pnl_dock_item_get_title (PnlDockItem *self)
 
   if (PNL_DOCK_ITEM_GET_IFACE (self)->get_title)
     return PNL_DOCK_ITEM_GET_IFACE (self)->get_title (self);
+
+  return NULL;
+}
+
+/**
+ * pnl_dock_item_get_icon_name:
+ * @self: A #PnlDockItem
+ *
+ * Gets the icon_name for the #PnlDockItem.
+ *
+ * Generally, you want to use a #PnlDockWidget which has a "icon-name" property
+ * you can set. But this can be helpful for integration of various container
+ * widgets.
+ *
+ * Returns: (transfer full) (nullable): A newly allocated string or %NULL.
+ */
+gchar *
+pnl_dock_item_get_icon_name (PnlDockItem *self)
+{
+  g_return_val_if_fail (PNL_IS_DOCK_ITEM (self), NULL);
+
+  if (PNL_DOCK_ITEM_GET_IFACE (self)->get_icon_name)
+    return PNL_DOCK_ITEM_GET_IFACE (self)->get_icon_name (self);
 
   return NULL;
 }

@@ -41,10 +41,13 @@ struct _PnlDockWidgetClass
   gpointer _reserved8;
 };
 
-GtkWidget   *pnl_dock_widget_new       (void);
-const gchar *pnl_dock_widget_get_title (PnlDockWidget *self);
-void         pnl_dock_widget_set_title (PnlDockWidget *self,
-                                        const gchar   *title);
+GtkWidget   *pnl_dock_widget_new           (void);
+const gchar *pnl_dock_widget_get_icon_name (PnlDockWidget *self);
+void         pnl_dock_widget_set_icon_name (PnlDockWidget *self,
+                                            const gchar   *icon_name);
+const gchar *pnl_dock_widget_get_title     (PnlDockWidget *self);
+void         pnl_dock_widget_set_title     (PnlDockWidget *self,
+                                            const gchar   *title);
 
 G_END_DECLS
 
