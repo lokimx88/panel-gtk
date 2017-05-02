@@ -395,39 +395,50 @@ pnl_dock_revealer_get_preferred_width (GtkWidget *widget,
 {
   PnlDockRevealer *self = (PnlDockRevealer *)widget;
   PnlDockRevealerPrivate *priv = pnl_dock_revealer_get_instance_private (self);
+  GtkStyleContext *style_context;
   GtkWidget *child;
+  GtkBorder borders;
 
   g_assert (PNL_IS_DOCK_REVEALER (self));
   g_assert (min_width != NULL);
   g_assert (nat_width != NULL);
 
+  style_context = gtk_widget_get_style_context (widget);
+  pnl_gtk_style_context_get_borders (style_context, &borders);
+
   child = gtk_bin_get_child (GTK_BIN (self));
 
-  GTK_WIDGET_CLASS (pnl_dock_revealer_parent_class)->get_preferred_width (widget, min_width, nat_width);
+  pnl_dock_revealer_get_child_preferred_width (self, min_width, nat_width);
+
+  *min_width += borders.left + borders.right;
+  *nat_width += borders.left + borders.right;
 
   priv->nat_req.width = *nat_width;
 
-  if (IS_HORIZONTAL (priv->transition_type) && priv->animation != NULL)
+  if (IS_HORIZONTAL (priv->transition_type))
     {
-      /*
-       * We allow going smaller than the minimum size during animations
-       * and rely on clipping to hide the child.
-       */
-      *min_width = 0;
+      if (priv->animation != NULL)
+        {
+          /*
+           * We allow going smaller than the minimum size during animations
+           * and rely on clipping to hide the child.
+           */
+          *min_width = 0;
 
-      /*
-       * Our natural width is adjusted for the in-progress animation.
-       */
-      *nat_width *= gtk_adjustment_get_value (priv->adjustment);
-    }
-  else if (child != NULL && !gtk_widget_get_child_visible (child))
-    {
-      /*
-       * Make sure we are completely hidden if the child is not currently
-       * visible.
-       */
-      *min_width = 0;
-      *nat_width = 0;
+          /*
+           * Our natural width is adjusted for the in-progress animation.
+           */
+          *nat_width *= gtk_adjustment_get_value (priv->adjustment);
+        }
+      else if (child != NULL && !gtk_widget_get_child_visible (child))
+        {
+          /*
+           * Make sure we are completely hidden if the child is not currently
+           * visible.
+           */
+          *min_width = 0;
+          *nat_width = 0;
+        }
     }
 }
 
@@ -470,39 +481,50 @@ pnl_dock_revealer_get_preferred_height (GtkWidget *widget,
 {
   PnlDockRevealer *self = (PnlDockRevealer *)widget;
   PnlDockRevealerPrivate *priv = pnl_dock_revealer_get_instance_private (self);
+  GtkStyleContext *style_context;
   GtkWidget *child;
+  GtkBorder borders;
 
   g_assert (PNL_IS_DOCK_REVEALER (self));
   g_assert (min_height != NULL);
   g_assert (nat_height != NULL);
 
+  style_context = gtk_widget_get_style_context (widget);
+  pnl_gtk_style_context_get_borders (style_context, &borders);
+
   child = gtk_bin_get_child (GTK_BIN (self));
 
-  GTK_WIDGET_CLASS (pnl_dock_revealer_parent_class)->get_preferred_height (widget, min_height, nat_height);
+  pnl_dock_revealer_get_child_preferred_height (self, min_height, nat_height);
+
+  *min_height += borders.top + borders.bottom;
+  *nat_height += borders.top + borders.bottom;
 
   priv->nat_req.height = *nat_height;
 
-  if (IS_VERTICAL (priv->transition_type) && priv->animation != NULL)
+  if (IS_VERTICAL (priv->transition_type))
     {
-      /*
-       * We allow going smaller than the minimum size during animations
-       * and rely on clipping to hide the child.
-       */
-      *min_height = 0;
+      if (priv->animation != NULL)
+        {
+          /*
+           * We allow going smaller than the minimum size during animations
+           * and rely on clipping to hide the child.
+           */
+          *min_height = 0;
 
-      /*
-       * Our natural height is adjusted for the in-progress animation.
-       */
-      *nat_height *= gtk_adjustment_get_value (priv->adjustment);
-    }
-  else if (child != NULL && !gtk_widget_get_child_visible (child))
-    {
-      /*
-       * Make sure we are completely hidden if the child is not currently
-       * visible.
-       */
-      *min_height = 0;
-      *nat_height = 0;
+          /*
+           * Our natural height is adjusted for the in-progress animation.
+           */
+          *nat_height *= gtk_adjustment_get_value (priv->adjustment);
+        }
+      else if (child != NULL && !gtk_widget_get_child_visible (child))
+        {
+          /*
+           * Make sure we are completely hidden if the child is not currently
+           * visible.
+           */
+          *min_height = 0;
+          *nat_height = 0;
+        }
     }
 }
 
