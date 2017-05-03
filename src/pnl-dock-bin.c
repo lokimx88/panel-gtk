@@ -197,7 +197,7 @@ pnl_dock_bin_resort_children (PnlDockBin *self)
 }
 
 static GAction *
-pnl_dock_bin_get_pinned_action_for_type (PnlDockBin          *self,
+pnl_dock_bin_get_pinned_change_state_for_type (PnlDockBin          *self,
                                          PnlDockBinChildType  type)
 {
   PnlDockBinPrivate *priv = pnl_dock_bin_get_instance_private (self);
@@ -1030,9 +1030,9 @@ pnl_dock_bin_size_allocate (GtkWidget     *widget,
 }
 
 static void
-pnl_dock_bin_visible_action (GSimpleAction *action,
-                             GVariant      *state,
-                             gpointer       user_data)
+pnl_dock_bin_visible_change_state (GSimpleAction *action,
+                                   GVariant      *state,
+                                   gpointer       user_data)
 {
   PnlDockBin *self = user_data;
   PnlDockBinChild *child;
@@ -1094,7 +1094,7 @@ pnl_dock_bin_set_child_pinned (PnlDockBin *self,
 
   gtk_widget_queue_resize (GTK_WIDGET (self));
 
-  action = pnl_dock_bin_get_pinned_action_for_type (self, child->type);
+  action = pnl_dock_bin_get_pinned_change_state_for_type (self, child->type);
 
   g_simple_action_set_state (G_SIMPLE_ACTION (action),
                              g_variant_new_boolean (child->pinned));
@@ -1102,9 +1102,9 @@ pnl_dock_bin_set_child_pinned (PnlDockBin *self,
 
 
 static void
-pnl_dock_bin_pinned_action (GSimpleAction *action,
-                            GVariant      *state,
-                            gpointer       user_data)
+pnl_dock_bin_pinned_change_state (GSimpleAction *action,
+                                  GVariant      *state,
+                                  gpointer       user_data)
 {
   PnlDockBin *self = user_data;
   PnlDockBinChild *child;
@@ -1926,14 +1926,14 @@ pnl_dock_bin_init (PnlDockBin *self)
     { (gchar *)"PNL_DOCK_BIN_WIDGET", GTK_TARGET_SAME_APP, 0 },
   };
   static const GActionEntry entries[] = {
-    { "left-visible", NULL, NULL, "false", pnl_dock_bin_visible_action },
-    { "right-visible", NULL, NULL, "false", pnl_dock_bin_visible_action },
-    { "top-visible", NULL, NULL, "false", pnl_dock_bin_visible_action },
-    { "bottom-visible", NULL, NULL, "false", pnl_dock_bin_visible_action },
-    { "left-pinned", NULL, NULL, "true", pnl_dock_bin_pinned_action },
-    { "right-pinned", NULL, NULL, "true", pnl_dock_bin_pinned_action },
-    { "top-pinned", NULL, NULL, "true", pnl_dock_bin_pinned_action },
-    { "bottom-pinned", NULL, NULL, "true", pnl_dock_bin_pinned_action },
+    { "left-visible", NULL, NULL, "false", pnl_dock_bin_visible_change_state },
+    { "right-visible", NULL, NULL, "false", pnl_dock_bin_visible_change_state },
+    { "top-visible", NULL, NULL, "false", pnl_dock_bin_visible_change_state },
+    { "bottom-visible", NULL, NULL, "false", pnl_dock_bin_visible_change_state },
+    { "left-pinned", NULL, NULL, "true", pnl_dock_bin_pinned_change_state },
+    { "right-pinned", NULL, NULL, "true", pnl_dock_bin_pinned_change_state },
+    { "top-pinned", NULL, NULL, "true", pnl_dock_bin_pinned_change_state },
+    { "bottom-pinned", NULL, NULL, "true", pnl_dock_bin_pinned_change_state },
   };
 
   gtk_widget_set_has_window (GTK_WIDGET (self), TRUE);
