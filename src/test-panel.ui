@@ -76,6 +76,53 @@
             <property name="pack-type">end</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">true</property>
+            <style>
+              <class name="linked"/>
+            </style>
+            <child>
+              <object class="GtkToggleButton">
+                <property name="action-name">dockbin.left-pinned</property>
+                <property name="visible">true</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="icon-name">panel-left-pane-symbolic</property>
+                    <property name="visible">true</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkToggleButton">
+                <property name="action-name">dockbin.bottom-pinned</property>
+                <property name="visible">true</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="icon-name">panel-bottom-pane-symbolic</property>
+                    <property name="visible">true</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkToggleButton">
+                <property name="action-name">dockbin.right-pinned</property>
+                <property name="visible">true</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="icon-name">panel-right-pane-symbolic</property>
+                    <property name="visible">true</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="pack-type">end</property>
+          </packing>
+        </child>
       </object>
     </child>
     <child>
