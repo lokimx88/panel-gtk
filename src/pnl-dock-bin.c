@@ -1015,12 +1015,13 @@ pnl_dock_bin_size_allocate (GtkWidget     *widget,
 
       if (child->handle != NULL)
         {
-          if (PNL_IS_DOCK_BIN_EDGE (child->widget) &&
-              pnl_dock_revealer_get_reveal_child (PNL_DOCK_REVEALER (child->widget)))
+          if (PNL_IS_DOCK_BIN_EDGE (child->widget))
             {
               if (gtk_widget_get_realized (child->widget))
                 gdk_window_raise (gtk_widget_get_window (child->widget));
-              gdk_window_show (child->handle);
+
+              if (pnl_dock_revealer_get_reveal_child (PNL_DOCK_REVEALER (child->widget)))
+                gdk_window_show (child->handle);
             }
           else
             gdk_window_hide (child->handle);
