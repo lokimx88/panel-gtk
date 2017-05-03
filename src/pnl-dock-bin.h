@@ -20,8 +20,8 @@
 # error "Only <pnl.h> can be included directly."
 #endif
 
-#ifndef PNL_DOCK_BIN_BIN_H
-#define PNL_DOCK_BIN_BIN_H
+#ifndef PNL_DOCK_BIN_H
+#define PNL_DOCK_BIN_H
 
 #include "pnl-dock-types.h"
 
@@ -54,4 +54,4 @@ GtkWidget *pnl_dock_bin_get_right_edge    (PnlDockBin   *self);
 
 G_END_DECLS
 
-#endif /* PNL_DOCK_BIN_BIN_H */
+#endif /* PNL_DOCK_BIN_H */
