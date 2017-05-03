@@ -28,7 +28,6 @@ typedef struct
 {
   GtkStack         *stack;
   PnlTabStrip      *tab_strip;
-  GtkBox           *tab_strip_box;
   GtkButton        *pinned_button;
   GtkPositionType   edge : 2;
   PnlTabStyle       style : 2;
@@ -206,23 +205,6 @@ pnl_dock_stack_init (PnlDockStack *self)
    *       switch to CROSSFADE just yet.
    */
 
-  priv->tab_strip_box = g_object_new (GTK_TYPE_BOX,
-                                      "orientation", GTK_ORIENTATION_HORIZONTAL,
-                                      "visible", TRUE,
-                                      NULL);
-  pnl_gtk_widget_add_class (GTK_WIDGET (priv->tab_strip_box), "header");
-
-  priv->pinned_button = g_object_new (GTK_TYPE_BUTTON,
-                                      "action-name", "panel.pinned",
-                                      "child", g_object_new (GTK_TYPE_IMAGE,
-                                                             "icon-name", "window-maximize-symbolic",
-                                                             "visible", TRUE,
-                                                             NULL),
-                                      "expand", FALSE,
-                                      "visible", FALSE,
-                                      NULL);
-  pnl_gtk_widget_add_class (GTK_WIDGET (priv->pinned_button), "controls");
-
   priv->stack = g_object_new (GTK_TYPE_STACK,
                               "homogeneous", TRUE,
                               "visible", TRUE,
@@ -234,19 +216,21 @@ pnl_dock_stack_init (PnlDockStack *self)
                                   "visible", TRUE,
                                   NULL);
 
+  priv->pinned_button = g_object_new (GTK_TYPE_BUTTON,
+                                      "action-name", "panel.pinned",
+                                      "child", g_object_new (GTK_TYPE_IMAGE,
+                                                             "icon-name", "window-maximize-symbolic",
+                                                             "visible", TRUE,
+                                                             NULL),
+                                      "visible", FALSE,
+                                      NULL);
+
   GTK_CONTAINER_CLASS (pnl_dock_stack_parent_class)->add (GTK_CONTAINER (self),
-                                                          GTK_WIDGET (priv->tab_strip_box));
+                                                          GTK_WIDGET (priv->tab_strip));
   GTK_CONTAINER_CLASS (pnl_dock_stack_parent_class)->add (GTK_CONTAINER (self),
                                                           GTK_WIDGET (priv->stack));
 
-  gtk_container_add_with_properties (GTK_CONTAINER (priv->tab_strip_box), GTK_WIDGET (priv->tab_strip),
-                                     "fill", TRUE,
-                                     "expand", TRUE,
-                                     NULL);
-  gtk_container_add_with_properties (GTK_CONTAINER (priv->tab_strip_box), GTK_WIDGET (priv->pinned_button),
-                                     "fill", FALSE,
-                                     "expand", FALSE,
-                                     NULL);
+  pnl_tab_strip_add_control (priv->tab_strip, GTK_WIDGET (priv->pinned_button));
 }
 
 GtkWidget *
@@ -288,9 +272,7 @@ pnl_dock_stack_set_edge (PnlDockStack    *self,
                                           GTK_ORIENTATION_VERTICAL);
           gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip),
                                           GTK_ORIENTATION_HORIZONTAL);
-          gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip_box),
-                                          GTK_ORIENTATION_HORIZONTAL);
-          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip_box),
+          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip),
                                    "position", 0,
                                    NULL);
           break;
@@ -300,9 +282,7 @@ pnl_dock_stack_set_edge (PnlDockStack    *self,
                                           GTK_ORIENTATION_VERTICAL);
           gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip),
                                           GTK_ORIENTATION_HORIZONTAL);
-          gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip_box),
-                                          GTK_ORIENTATION_HORIZONTAL);
-          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip_box),
+          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip),
                                    "position", 1,
                                    NULL);
           break;
@@ -312,9 +292,7 @@ pnl_dock_stack_set_edge (PnlDockStack    *self,
                                           GTK_ORIENTATION_HORIZONTAL);
           gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip),
                                           GTK_ORIENTATION_VERTICAL);
-          gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip_box),
-                                          GTK_ORIENTATION_VERTICAL);
-          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip_box),
+          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip),
                                    "position", 0,
                                    NULL);
           break;
@@ -324,9 +302,7 @@ pnl_dock_stack_set_edge (PnlDockStack    *self,
                                           GTK_ORIENTATION_HORIZONTAL);
           gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip),
                                           GTK_ORIENTATION_VERTICAL);
-          gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->tab_strip_box),
-                                          GTK_ORIENTATION_VERTICAL);
-          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip_box),
+          gtk_container_child_set (GTK_CONTAINER (self), GTK_WIDGET (priv->tab_strip),
                                    "position", 1,
                                    NULL);
           break;

@@ -32,7 +32,11 @@ typedef struct
   PnlTabStyle      style : 2;
 } PnlTabStripPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (PnlTabStrip, pnl_tab_strip, GTK_TYPE_BOX)
+static void buildable_iface_init (GtkBuildableIface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (PnlTabStrip, pnl_tab_strip, GTK_TYPE_BOX,
+                         G_ADD_PRIVATE (PnlTabStrip)
+                         G_IMPLEMENT_INTERFACE (GTK_TYPE_BUILDABLE, buildable_iface_init))
 
 enum {
   PROP_0,
@@ -467,7 +471,11 @@ pnl_tab_strip_stack_add (PnlTabStrip *self,
                            self,
                            G_CONNECT_SWAPPED);
 
-  gtk_container_add (GTK_CONTAINER (self), GTK_WIDGET (tab));
+  gtk_container_add_with_properties (GTK_CONTAINER (self), GTK_WIDGET (tab),
+                                     "pack-type", GTK_PACK_START,
+                                     "expand", TRUE,
+                                     "fill", TRUE,
+                                     NULL);
 
   g_object_bind_property (widget, "visible", tab, "visible", G_BINDING_SYNC_CREATE);
 
@@ -676,7 +684,10 @@ apply_style (GtkWidget *widget,
 {
   PnlTabStyle style = GPOINTER_TO_UINT (user_data);
 
-  pnl_tab_set_style (PNL_TAB (widget), style);
+  g_assert (GTK_IS_WIDGET (widget));
+
+  if (PNL_IS_TAB (widget))
+    pnl_tab_set_style (PNL_TAB (widget), style);
 }
 
 guint
@@ -703,4 +714,45 @@ pnl_tab_strip_set_style (PnlTabStrip *self,
       gtk_container_foreach (GTK_CONTAINER (self), apply_style, GUINT_TO_POINTER (style));
       g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_STYLE]);
     }
+}
+
+void
+pnl_tab_strip_add_control (PnlTabStrip *self,
+                           GtkWidget   *widget)
+{
+  g_return_if_fail (PNL_IS_TAB_STRIP (self));
+  g_return_if_fail (GTK_IS_WIDGET (widget));
+
+  gtk_container_add_with_properties (GTK_CONTAINER (self), widget,
+                                     "pack-type", GTK_PACK_END,
+                                     "expand", FALSE,
+                                     "fill", FALSE,
+                                     NULL);
+
+  gtk_style_context_add_class (gtk_widget_get_style_context (widget), "control");
+}
+
+static void
+pnl_tab_strip_add_child (GtkBuildable *buildable,
+                         GtkBuilder   *builder,
+                         GObject      *child,
+                         const gchar  *child_type)
+{
+  PnlTabStrip *self = (PnlTabStrip *)buildable;
+
+  g_assert (PNL_IS_TAB_STRIP (self));
+  g_assert (GTK_IS_BUILDER (builder));
+  g_assert (G_IS_OBJECT (child));
+
+  if (g_strcmp0 (child_type, "control") == 0 && GTK_IS_WIDGET (child))
+    pnl_tab_strip_add_control (self, GTK_WIDGET (child));
+  else
+    g_warning ("I do not know how to add %s of type %s",
+               G_OBJECT_TYPE_NAME (child), child_type ? child_type : "NULL");
+}
+
+static void
+buildable_iface_init (GtkBuildableIface *iface)
+{
+  iface->add_child = pnl_tab_strip_add_child;
 }

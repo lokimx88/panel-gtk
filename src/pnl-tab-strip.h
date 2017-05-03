@@ -55,6 +55,8 @@ void             pnl_tab_strip_set_show_labels (PnlTabStrip     *self,
 PnlTabStyle      pnl_tab_strip_get_style       (PnlTabStrip     *self);
 void             pnl_tab_strip_set_style       (PnlTabStrip     *self,
                                                 PnlTabStyle      style);
+void             pnl_tab_strip_add_control     (PnlTabStrip     *self,
+                                                GtkWidget       *widget);
 
 G_END_DECLS
 
