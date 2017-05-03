@@ -155,6 +155,8 @@ pnl_child_property_action_get_state (GAction *action)
         }
     }
 
+  g_warning ("Failed to determine default state");
+
   return NULL;
 }
 
@@ -279,8 +281,7 @@ pnl_child_property_action_activate (GAction  *action,
         }
     }
 
-  g_warning ("I don't know how to activate %s",
-             self->name ? self->name : "<unnamed>");
+  g_warning ("I don't know how to activate %s", self->name);
 }
 
 static void
