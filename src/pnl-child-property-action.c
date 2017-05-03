@@ -378,7 +378,7 @@ pnl_child_property_action_get_property (GObject    *object,
       break;
 
     case PROP_STATE_TYPE:
-      g_value_set_boxed (value, pnl_child_property_action_get_state_hint (G_ACTION (self)));
+      g_value_set_boxed (value, pnl_child_property_action_get_state_type (G_ACTION (self)));
       break;
 
     case PROP_NAME:
