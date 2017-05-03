@@ -27,6 +27,8 @@
 
 G_BEGIN_DECLS
 
+#define PNL_DOCK_BIN_STYLE_CLASS_PINNED "pinned"
+
 struct _PnlDockBinClass
 {
   GtkContainerClass parent;

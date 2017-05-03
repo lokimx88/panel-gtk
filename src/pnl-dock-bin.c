@@ -1086,9 +1086,9 @@ pnl_dock_bin_set_child_pinned (PnlDockBin *self,
   style_context = gtk_widget_get_style_context (widget);
 
   if (child->pinned)
-    gtk_style_context_add_class (style_context, "pinned");
+    gtk_style_context_add_class (style_context, PNL_DOCK_BIN_STYLE_CLASS_PINNED);
   else
-    gtk_style_context_remove_class (style_context, "pinned");
+    gtk_style_context_remove_class (style_context, PNL_DOCK_BIN_STYLE_CLASS_PINNED);
 
   pnl_dock_bin_resort_children (self);
 
@@ -1674,7 +1674,7 @@ pnl_dock_bin_create_edge (PnlDockBin          *self,
 
   if (child->pinned)
     gtk_style_context_add_class (gtk_widget_get_style_context (child->widget),
-                                 "pinned");
+                                 PNL_DOCK_BIN_STYLE_CLASS_PINNED);
 }
 
 static void
