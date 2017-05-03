@@ -97,6 +97,9 @@ pnl_child_property_action_get_state_type (GAction *action)
         }
     }
 
+  g_warning ("Failed to discover state type for child property %s",
+             self->child_property_name);
+
   return NULL;
 }
 
