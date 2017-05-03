@@ -20,27 +20,38 @@ pnldockpaned .handle {
   border: 1px solid @borders;
 }
 
-pnldockstack .header {
+pnldockstack pnltabstrip {
   padding-top: 2px;
   background-color: @content_view_bg;
   color: @theme_fg_color;
   border-bottom: 1px solid mix(@theme_bg_color, @borders, 0.25);
 }
 
-pnldockstack .header pnltabstrip pnltab {
+pnldockstack pnltabstrip button.control,
+pnldockstack pnltabstrip pnltab {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+
   border-bottom: 3px;
   border-bottom-style: solid;
   border-bottom-color: transparent;
+
   margin-left: 6px;
   margin-right: 6px;
+
+  color: @theme_fg_color;
 }
 
-pnltab {
+pnldockstack pnltabstrip button.control,
+pnldockstack pnltabstrip pnltab button,
+pnldockstack pnltabstrip pnltab {
   transition-duration: 200ms;
 }
 
-pnldockstack .header button.controls,
-pnldockstack .header pnltabstrip pnltab button {
+pnldockstack pnltabstrip pnltab button {
   padding: 0;
   margin: 0;
   border: none;
@@ -48,15 +59,22 @@ pnldockstack .header pnltabstrip pnltab button {
   box-shadow: none;
 }
 
-pnldockstack .header pnltabstrip pnltab:active {
+pnldockstack pnltabstrip pnltab:active {
   border-bottom-color: @theme_selected_bg_color;
 }
 
-pnldockstack .header pnltabstrip pnltab:hover {
+pnldockstack pnltabstrip button.control:last-child {
+  margin-right: 16px;
+}
+
+pnldockstack pnltabstrip button.control:hover,
+pnldockstack pnltabstrip pnltab:hover {
   border-bottom-color: mix(@borders, @theme_bg_color, 0.25);
 }
 
-pnldockstack .header pnltabstrip pnltab:hover:checked,
-pnldockstack .header pnltabstrip pnltab:checked {
+pnldockstack pnltabstrip button.control:hover:checked,
+pnldockstack pnltabstrip button.control:checked,
+pnldockstack pnltabstrip pnltab:hover:checked,
+pnldockstack pnltabstrip pnltab:checked {
   border-bottom-color: @theme_selected_bg_color;
 }
