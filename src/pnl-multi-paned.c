@@ -1551,6 +1551,10 @@ pnl_multi_paned_draw (GtkWidget *widget,
           PnlMultiPanedChild *child = &g_array_index (priv->children, PnlMultiPanedChild, i);
           GtkAllocation child_alloc;
 
+          if (!gtk_widget_get_visible (child->widget) ||
+              !gtk_widget_get_child_visible (child->widget))
+            continue;
+
           if (pnl_multi_paned_is_last_visible_child (self, child))
             break;
 
