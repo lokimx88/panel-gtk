@@ -126,6 +126,19 @@ pnl_dock_item_real_release (PnlDockItem *self,
              G_OBJECT_TYPE_NAME (child));
 }
 
+static gboolean
+pnl_dock_item_real_get_can_minimize (PnlDockItem *self,
+                                     PnlDockItem *descendant)
+{
+  return FALSE;
+}
+
+static gboolean
+pnl_dock_item_real_get_can_close (PnlDockItem *self)
+{
+  return FALSE;
+}
+
 static void
 pnl_dock_item_default_init (PnlDockItemInterface *iface)
 {
@@ -134,6 +147,8 @@ pnl_dock_item_default_init (PnlDockItemInterface *iface)
   iface->manager_set = pnl_dock_item_real_manager_set;
   iface->update_visibility = pnl_dock_item_real_update_visibility;
   iface->release = pnl_dock_item_real_release;
+  iface->get_can_close = pnl_dock_item_real_get_can_close;
+  iface->get_can_minimize = pnl_dock_item_real_get_can_minimize;
 
   signals [MANAGER_SET] =
     g_signal_new ("manager-set",
@@ -616,4 +631,23 @@ pnl_dock_item_release (PnlDockItem     *self,
                        pnl_dock_item_child_weak_notify,
                        self);
   pnl_dock_item_child_weak_notify (self, (GObject *)child);
+}
+
+gboolean
+pnl_dock_item_get_can_minimize (PnlDockItem *self)
+{
+  PnlDockItem *parent;
+
+  g_return_val_if_fail (PNL_IS_DOCK_ITEM (self), FALSE);
+
+  parent = pnl_dock_item_get_parent (self);
+
+  while (parent != NULL)
+    {
+      if (PNL_DOCK_ITEM_GET_IFACE (parent)->get_can_minimize (parent, self))
+        return TRUE;
+      parent = pnl_dock_item_get_parent (parent);
+    }
+
+  return FALSE;
 }

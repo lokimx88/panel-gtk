@@ -47,6 +47,8 @@ struct _PnlDockItemInterface
   gchar          *(*get_title)          (PnlDockItem     *self);
   gchar          *(*get_icon_name)      (PnlDockItem     *self);
   gboolean        (*get_can_close)      (PnlDockItem     *self);
+  gboolean        (*get_can_minimize)   (PnlDockItem     *self,
+                                         PnlDockItem     *descendant);
   gboolean        (*close)              (PnlDockItem     *self);
   gboolean        (*minimize)           (PnlDockItem     *self,
                                          PnlDockItem     *child,
@@ -74,6 +76,7 @@ PnlDockItem    *pnl_dock_item_get_parent        (PnlDockItem     *self);
 gchar          *pnl_dock_item_get_title         (PnlDockItem     *self);
 gchar          *pnl_dock_item_get_icon_name     (PnlDockItem     *self);
 gboolean        pnl_dock_item_get_can_close     (PnlDockItem     *self);
+gboolean        pnl_dock_item_get_can_minimize  (PnlDockItem     *self);
 gboolean        pnl_dock_item_close             (PnlDockItem     *self);
 gboolean        pnl_dock_item_minimize          (PnlDockItem     *self,
                                                  PnlDockItem     *child,
