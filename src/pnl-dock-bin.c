@@ -789,6 +789,11 @@ pnl_dock_bin_child_size_allocate (PnlDockBin      *self,
       GtkAllocation handle_alloc = { 0 };
       GtkRequisition neighbor_min = { 0 };
       GtkRequisition neighbor_nat = { 0 };
+      GtkStyleContext *style_context = gtk_widget_get_style_context (child->widget);
+      GtkStateType state = gtk_style_context_get_state (style_context);
+      GtkBorder margin;
+
+      gtk_style_context_get_margin (style_context, state, &margin);
 
       pnl_dock_bin_get_children_preferred_height (self, child, 1,
                                                   &child->min_req.height,
@@ -885,6 +890,7 @@ pnl_dock_bin_child_size_allocate (PnlDockBin      *self,
       switch (child->type)
         {
         case PNL_DOCK_BIN_CHILD_LEFT:
+
           /*
            * When left-to-right, we often have a scrollbar to deal
            * with right here. So fudge the allocation position a bit
@@ -901,20 +907,29 @@ pnl_dock_bin_child_size_allocate (PnlDockBin      *self,
               handle_alloc.x += handle_alloc.width - HANDLE_WIDTH;
               handle_alloc.width = HANDLE_WIDTH;
             }
+
+          handle_alloc.x -= margin.right;
+
           break;
 
         case PNL_DOCK_BIN_CHILD_RIGHT:
           handle_alloc.width = HANDLE_WIDTH;
+
           if (gtk_widget_get_direction (child->widget) == GTK_TEXT_DIR_RTL)
             handle_alloc.x -= (HANDLE_WIDTH / 2);
+
+          handle_alloc.x += margin.left;
+
           break;
 
         case PNL_DOCK_BIN_CHILD_BOTTOM:
           handle_alloc.height = HANDLE_HEIGHT;
+          handle_alloc.y += margin.top;
           break;
 
         case PNL_DOCK_BIN_CHILD_TOP:
           handle_alloc.y += handle_alloc.height - HANDLE_HEIGHT;
+          handle_alloc.y -= margin.bottom;
           handle_alloc.height = HANDLE_HEIGHT;
           break;
 
