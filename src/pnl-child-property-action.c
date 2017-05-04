@@ -61,12 +61,6 @@ pnl_child_property_action_get_name (GAction *action)
 }
 
 static const GVariantType *
-pnl_child_property_action_get_parameter_type (GAction *action)
-{
-  return NULL;
-}
-
-static const GVariantType *
 pnl_child_property_action_get_state_type (GAction *action)
 {
   PnlChildPropertyAction *self = PNL_CHILD_PROPERTY_ACTION (action);
@@ -102,6 +96,18 @@ pnl_child_property_action_get_state_type (GAction *action)
 
   return NULL;
 }
+
+static const GVariantType *
+pnl_child_property_action_get_parameter_type (GAction *action)
+{
+  const GVariantType *state_type = g_action_get_state_type (action);
+
+  if (g_variant_type_equal (state_type, G_VARIANT_TYPE ("b")))
+    return NULL;
+
+  return state_type;
+}
+
 
 static GVariant *
 pnl_child_property_action_get_state_hint (GAction *action)
@@ -275,11 +281,43 @@ pnl_child_property_action_activate (GAction  *action,
       pspec = gtk_container_class_find_child_property (G_OBJECT_GET_CLASS (self->container),
                                                        self->child_property_name);
 
-      if (G_IS_PARAM_SPEC_BOOLEAN (pspec))
+      if (pspec != NULL)
         {
-          g_autoptr(GVariant) state = pnl_child_property_action_get_state (action);
-          gboolean value = state != NULL && g_variant_get_boolean (state);
-          g_action_change_state (action, g_variant_new_boolean (!value));
+          g_auto(GValue) value = G_VALUE_INIT;
+
+          if (G_IS_PARAM_SPEC_BOOLEAN (pspec))
+            {
+              g_value_init (&value, G_TYPE_BOOLEAN);
+              g_value_set_boolean (&value, g_variant_get_boolean (parameter));
+            }
+          else if (G_IS_PARAM_SPEC_INT (pspec))
+            {
+              g_value_init (&value, G_TYPE_INT);
+              g_value_set_int (&value, g_variant_get_int32 (parameter));
+            }
+          else if (G_IS_PARAM_SPEC_UINT (pspec))
+            {
+              g_value_init (&value, G_TYPE_UINT);
+              g_value_set_uint (&value, g_variant_get_uint32 (parameter));
+            }
+          else if (G_IS_PARAM_SPEC_STRING (pspec))
+            {
+              g_value_init (&value, G_TYPE_STRING);
+              g_value_set_string (&value, g_variant_get_string (parameter, NULL));
+            }
+          else if (G_IS_PARAM_SPEC_DOUBLE (pspec) || G_IS_PARAM_SPEC_FLOAT (pspec))
+            {
+              g_value_init (&value, G_TYPE_DOUBLE);
+              g_value_set_double (&value, g_variant_get_double (parameter));
+            }
+          else
+            {
+              g_warning ("Failed to transform state type");
+              return;
+            }
+
+          gtk_container_child_set_property (self->container, self->child, pspec->name, &value);
+
           return;
         }
     }
