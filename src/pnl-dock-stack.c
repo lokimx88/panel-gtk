@@ -21,6 +21,7 @@
 #include "pnl-dock-item.h"
 #include "pnl-dock-stack.h"
 #include "pnl-dock-widget.h"
+#include "pnl-tab-private.h"
 #include "pnl-tab-strip.h"
 #include "pnl-util-private.h"
 
@@ -373,9 +374,26 @@ pnl_dock_stack_set_child_visible (PnlDockItem *item,
 }
 
 static void
+update_tab_controls (GtkWidget *widget,
+                     gpointer   unused)
+{
+  g_assert (GTK_IS_WIDGET (widget));
+
+  if (PNL_IS_TAB (widget))
+    _pnl_tab_update_controls (PNL_TAB (widget));
+}
+
+static void
 pnl_dock_stack_update_visibility (PnlDockItem *item)
 {
-  g_assert (PNL_IS_DOCK_STACK (item));
+  PnlDockStack *self = (PnlDockStack *)item;
+  PnlDockStackPrivate *priv = pnl_dock_stack_get_instance_private (self);
+
+  g_assert (PNL_IS_DOCK_STACK (self));
+
+  gtk_container_foreach (GTK_CONTAINER (priv->tab_strip),
+                         update_tab_controls,
+                         NULL);
 
   if (!pnl_dock_item_has_widgets (item))
     gtk_widget_hide (GTK_WIDGET (item));
