@@ -1098,8 +1098,11 @@ pnl_dock_bin_set_child_pinned (PnlDockBin *self,
 
   g_simple_action_set_state (G_SIMPLE_ACTION (action),
                              g_variant_new_boolean (child->pinned));
-}
 
+  if (child->widget != NULL)
+    gtk_container_child_notify_by_pspec (GTK_CONTAINER (self), child->widget,
+                                         child_properties [CHILD_PROP_PINNED]);
+}
 
 static void
 pnl_dock_bin_pinned_change_state (GSimpleAction *action,
@@ -1152,6 +1155,10 @@ pnl_dock_bin_set_child_priority (PnlDockBin *self,
   pnl_dock_bin_resort_children (self);
 
   gtk_widget_queue_resize (GTK_WIDGET (self));
+
+  if (child->widget != NULL)
+    gtk_container_child_notify_by_pspec (GTK_CONTAINER (self), child->widget,
+                                         child_properties [CHILD_PROP_PRIORITY]);
 }
 
 static void
