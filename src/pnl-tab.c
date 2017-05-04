@@ -21,6 +21,7 @@
 
 #include "pnl-dock-item.h"
 #include "pnl-tab.h"
+#include "pnl-tab-private.h"
 #include "pnl-util-private.h"
 
 struct _PnlTab { GtkEventBox parent; };
@@ -1112,6 +1113,25 @@ pnl_tab_set_style (PnlTab      *self,
       gtk_widget_set_visible (GTK_WIDGET (priv->title), !!(priv->style & PNL_TAB_TEXT));
       g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_STYLE]);
     }
+}
+
+void
+_pnl_tab_update_controls (PnlTab *self)
+{
+  PnlTabPrivate *priv = pnl_tab_get_instance_private (self);
+  gboolean can_close = FALSE;
+  gboolean can_minimize = FALSE;
+
+  g_return_if_fail (PNL_IS_TAB (self));
+
+  if (PNL_IS_DOCK_ITEM (priv->widget))
+    {
+      can_close = pnl_dock_item_get_can_close (PNL_DOCK_ITEM (priv->widget));
+      can_minimize = pnl_dock_item_get_can_minimize (PNL_DOCK_ITEM (priv->widget));
+    }
+
+  gtk_widget_set_visible (GTK_WIDGET (priv->close), can_close);
+  gtk_widget_set_visible (GTK_WIDGET (priv->minimize), can_minimize);
 }
 
 GType

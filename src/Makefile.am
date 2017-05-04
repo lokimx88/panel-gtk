@@ -61,6 +61,7 @@ libpanel_gtk_@API_VERSION@_la_SOURCES = \
 	pnl-resources.h \
 	pnl-tab-strip.c \
 	pnl-tab.c \
+	pnl-tab-private.h \
 	pnl-util-private.h \
 	pnl-util.c \
 	$(NULL)
