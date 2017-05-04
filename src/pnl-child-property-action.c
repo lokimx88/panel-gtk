@@ -126,6 +126,8 @@ pnl_child_property_action_get_state (GAction *action)
 {
   PnlChildPropertyAction *self = PNL_CHILD_PROPERTY_ACTION (action);
 
+  g_assert (PNL_IS_CHILD_PROPERTY_ACTION (self));
+
   if (self->container != NULL &&
       self->child != NULL &&
       self->child_property_name != NULL)
@@ -288,7 +290,20 @@ pnl_child_property_action_activate (GAction  *action,
           if (G_IS_PARAM_SPEC_BOOLEAN (pspec))
             {
               g_value_init (&value, G_TYPE_BOOLEAN);
-              g_value_set_boolean (&value, g_variant_get_boolean (parameter));
+
+              if (parameter != NULL)
+                g_value_set_boolean (&value, g_variant_get_boolean (parameter));
+              else
+                {
+                  g_auto(GValue) previous = G_VALUE_INIT;
+
+                  g_value_init (&previous, G_TYPE_BOOLEAN);
+                  gtk_container_child_get_property (self->container,
+                                                    self->child,
+                                                    self->child_property_name,
+                                                    &previous);
+                  g_value_set_boolean (&value, !g_value_get_boolean (&previous));
+                }
             }
           else if (G_IS_PARAM_SPEC_INT (pspec))
             {
