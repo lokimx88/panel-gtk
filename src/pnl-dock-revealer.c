@@ -559,12 +559,8 @@ pnl_dock_revealer_size_allocate (GtkWidget     *widget,
     return;
 
   child_allocation = *allocation;
-
-  if (gtk_widget_get_has_window (widget))
-    {
-      child_allocation.x = 0;
-      child_allocation.y = 0;
-    }
+  child_allocation.x = 0;
+  child_allocation.y = 0;
 
   style_context = gtk_widget_get_style_context (widget);
   pnl_gtk_style_context_get_borders (style_context, &borders);
@@ -576,7 +572,7 @@ pnl_dock_revealer_size_allocate (GtkWidget     *widget,
       child_allocation.width = nat_req.width;
 
       if (priv->transition_type == PNL_DOCK_REVEALER_TRANSITION_TYPE_SLIDE_RIGHT)
-        child_allocation.x = allocation->width - child_allocation.width;
+        child_allocation.x = allocation->width - borders.right - child_allocation.width;
     }
   else if (IS_VERTICAL (priv->transition_type))
     {
@@ -584,7 +580,7 @@ pnl_dock_revealer_size_allocate (GtkWidget     *widget,
       child_allocation.height = nat_req.height;
 
       if (priv->transition_type == PNL_DOCK_REVEALER_TRANSITION_TYPE_SLIDE_DOWN)
-        child_allocation.y = allocation->height - child_allocation.height;
+        child_allocation.y = allocation->height - borders.bottom - child_allocation.height;
     }
 
   gtk_widget_size_allocate (child, &child_allocation);
@@ -614,6 +610,8 @@ pnl_dock_revealer_draw (GtkWidget *widget,
   GtkAllocation alloc;
   GtkStyleContext *style_context;
   GtkWidget *child;
+  GtkBorder margin;
+  GtkStateFlags state;
 
   g_assert (PNL_IS_DOCK_REVEALER (self));
 
@@ -647,6 +645,10 @@ pnl_dock_revealer_draw (GtkWidget *widget,
     }
 
   style_context = gtk_widget_get_style_context (widget);
+  state = gtk_style_context_get_state (style_context);
+
+  gtk_style_context_get_margin (style_context, state, &margin);
+  pnl_gtk_allocation_subtract_border (&alloc, &margin);
 
   gtk_render_background (style_context, cr, alloc.x, alloc.y, alloc.width, alloc.height);
 
