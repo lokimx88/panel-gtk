@@ -78,9 +78,6 @@ pnldockbin {
   -PnlDockBin-handle-size: 1;
 }
 
-pnldockbinedge { background-color: @theme_bg_color; }
-pnldockbinedge.pinned { background-color: transparent; }
-
 pnldockwidget {
   background-color: transparent;
 }
@@ -127,9 +124,23 @@ pnldockbar button {
 
 
 
-pnldockbinedge {
+pnldockbinedge.left:not(.pinned) {
+  background: @theme_bg_color;
   border: 5px solid blue;
-  box-shadow: 5px 5px 15px black;
+  box-shadow: 5px 0px 15px black;
+  margin-right: 50px;
+}
+pnldockbinedge.right:not(.pinned) {
+  background: @theme_bg_color;
+  border: 5px solid blue;
+  box-shadow: 5px 0px 15px black;
+  margin-left: 20px;
+}
+pnldockbinedge.bottom:not(.pinned) {
+  background: @theme_bg_color;
+  border: 5px solid blue;
+  box-shadow: 0px 5px 15px black;
+  margin-top: 20px;
 }
 
 pnldockbinedge.pinned {
