@@ -100,8 +100,11 @@ pnl_tab_strip_update_action_targets (PnlTabStrip *self)
 
   for (i = 0, iter = list; iter != NULL; iter = iter->next, i++)
     {
-      PnlTab *tab = iter->data;
-      gtk_actionable_set_action_target (GTK_ACTIONABLE (tab), "i", i);
+      GtkWidget *widget = iter->data;
+
+      /* Ignore controls, and just update tabs */
+      if (PNL_IS_TAB (widget))
+        gtk_actionable_set_action_target (GTK_ACTIONABLE (widget), "i", i);
     }
 
   g_list_free (list);
