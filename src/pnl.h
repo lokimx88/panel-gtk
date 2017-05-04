@@ -31,8 +31,6 @@ G_BEGIN_DECLS
 #include "pnl-dock-bin-edge.h"
 #include "pnl-dock-item.h"
 #include "pnl-dock-manager.h"
-#include "pnl-dock-overlay.h"
-#include "pnl-dock-overlay-edge.h"
 #include "pnl-dock-paned.h"
 #include "pnl-dock-revealer.h"
 #include "pnl-dock-stack.h"
@@ -40,13 +38,13 @@ G_BEGIN_DECLS
 #include "pnl-dock-widget.h"
 #include "pnl-dock-window.h"
 
-#include "pnl-version.h"
-
 #include "pnl-bin.h"
 #include "pnl-child-property-action.h"
 #include "pnl-tab.h"
 #include "pnl-tab-strip.h"
 #include "pnl-multi-paned.h"
+
+#include "pnl-version.h"
 
 #undef PNL_INSIDE
 
