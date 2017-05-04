@@ -197,42 +197,6 @@ pnl_dock_bin_resort_children (PnlDockBin *self)
 }
 
 static GAction *
-pnl_dock_bin_get_pinned_change_state_for_type (PnlDockBin          *self,
-                                         PnlDockBinChildType  type)
-{
-  PnlDockBinPrivate *priv = pnl_dock_bin_get_instance_private (self);
-  const gchar *name = NULL;
-
-  g_assert (PNL_IS_DOCK_BIN (self));
-
-  switch (type)
-    {
-    case PNL_DOCK_BIN_CHILD_LEFT:
-      name = "left-pinned";
-      break;
-
-    case PNL_DOCK_BIN_CHILD_RIGHT:
-      name = "right-pinned";
-      break;
-
-    case PNL_DOCK_BIN_CHILD_TOP:
-      name = "top-pinned";
-      break;
-
-    case PNL_DOCK_BIN_CHILD_BOTTOM:
-      name = "bottom-pinned";
-      break;
-
-    case PNL_DOCK_BIN_CHILD_CENTER:
-    case LAST_PNL_DOCK_BIN_CHILD:
-    default:
-      g_assert_not_reached ();
-    }
-
-  return g_action_map_lookup_action (G_ACTION_MAP (priv->actions), name);
-}
-
-static GAction *
 pnl_dock_bin_get_visible_action_for_type (PnlDockBin          *self,
                                           PnlDockBinChildType  type)
 {
@@ -1071,7 +1035,6 @@ pnl_dock_bin_set_child_pinned (PnlDockBin *self,
 {
   PnlDockBinChild *child;
   GtkStyleContext *style_context;
-  GAction *action;
 
   g_assert (PNL_IS_DOCK_BIN (self));
   g_assert (GTK_IS_WIDGET (widget));
@@ -1094,49 +1057,9 @@ pnl_dock_bin_set_child_pinned (PnlDockBin *self,
 
   gtk_widget_queue_resize (GTK_WIDGET (self));
 
-  action = pnl_dock_bin_get_pinned_change_state_for_type (self, child->type);
-
-  g_simple_action_set_state (G_SIMPLE_ACTION (action),
-                             g_variant_new_boolean (child->pinned));
-
   if (child->widget != NULL)
     gtk_container_child_notify_by_pspec (GTK_CONTAINER (self), child->widget,
                                          child_properties [CHILD_PROP_PINNED]);
-}
-
-static void
-pnl_dock_bin_pinned_change_state (GSimpleAction *action,
-                                  GVariant      *state,
-                                  gpointer       user_data)
-{
-  PnlDockBin *self = user_data;
-  PnlDockBinChild *child;
-  PnlDockBinChildType type;
-  const gchar *action_name;
-  gboolean reveal_child;
-
-  g_assert (PNL_IS_DOCK_BIN (self));
-  g_assert (G_IS_SIMPLE_ACTION (action));
-  g_assert (state != NULL);
-  g_assert (g_variant_is_of_type (state, G_VARIANT_TYPE_BOOLEAN));
-
-  action_name = g_action_get_name (G_ACTION (action));
-  reveal_child = g_variant_get_boolean (state);
-
-  if (g_str_has_prefix (action_name, "left"))
-    type = PNL_DOCK_BIN_CHILD_LEFT;
-  else if (g_str_has_prefix (action_name, "right"))
-    type = PNL_DOCK_BIN_CHILD_RIGHT;
-  else if (g_str_has_prefix (action_name, "top"))
-    type = PNL_DOCK_BIN_CHILD_TOP;
-  else if (g_str_has_prefix (action_name, "bottom"))
-    type = PNL_DOCK_BIN_CHILD_BOTTOM;
-  else
-    return;
-
-  child = pnl_dock_bin_get_child_typed (self, type);
-
-  pnl_dock_bin_set_child_pinned (self, child->widget, reveal_child);
 }
 
 static void
@@ -1609,10 +1532,12 @@ pnl_dock_bin_create_edge (PnlDockBin          *self,
                           PnlDockBinChild     *child,
                           PnlDockBinChildType  type)
 {
-  gboolean reveal_child = FALSE;
+  PnlDockBinPrivate *priv = pnl_dock_bin_get_instance_private (self);
   g_autoptr(GSimpleActionGroup) map = NULL;
   g_autoptr(GAction) pinned = NULL;
+  const gchar *name = NULL;
   GAction *action;
+  gboolean reveal_child = FALSE;
 
   g_assert (PNL_IS_DOCK_BIN (self));
   g_assert (child != NULL);
@@ -1668,6 +1593,7 @@ pnl_dock_bin_create_edge (PnlDockBin          *self,
 
   pnl_dock_item_adopt (PNL_DOCK_ITEM (self), PNL_DOCK_ITEM (child->widget));
 
+  /* Action for panel children to easily activate */
   map = g_simple_action_group_new ();
   pinned = g_object_new (PNL_TYPE_CHILD_PROPERTY_ACTION,
                          "enabled", TRUE,
@@ -1678,6 +1604,25 @@ pnl_dock_bin_create_edge (PnlDockBin          *self,
                          NULL);
   g_action_map_add_action (G_ACTION_MAP (map), pinned);
   gtk_widget_insert_action_group (child->widget, "panel", G_ACTION_GROUP (map));
+  g_clear_object (&pinned);
+
+  /* Action for global widgetry to activate */
+  if (child->type == PNL_DOCK_BIN_CHILD_LEFT)
+    name = "left-pinned";
+  else if (child->type == PNL_DOCK_BIN_CHILD_RIGHT)
+    name = "right-pinned";
+  else if (child->type == PNL_DOCK_BIN_CHILD_TOP)
+    name = "top-pinned";
+  else if (child->type == PNL_DOCK_BIN_CHILD_BOTTOM)
+    name = "bottom-pinned";
+  pinned = g_object_new (PNL_TYPE_CHILD_PROPERTY_ACTION,
+                         "enabled", TRUE,
+                         "container", self,
+                         "child", child->widget,
+                         "child-property-name", "pinned",
+                         "name", name,
+                         NULL);
+  g_action_map_add_action (G_ACTION_MAP (priv->actions), pinned);
 
   if (child->pinned)
     gtk_style_context_add_class (gtk_widget_get_style_context (child->widget),
@@ -1937,10 +1882,6 @@ pnl_dock_bin_init (PnlDockBin *self)
     { "right-visible", NULL, NULL, "false", pnl_dock_bin_visible_change_state },
     { "top-visible", NULL, NULL, "false", pnl_dock_bin_visible_change_state },
     { "bottom-visible", NULL, NULL, "false", pnl_dock_bin_visible_change_state },
-    { "left-pinned", NULL, NULL, "true", pnl_dock_bin_pinned_change_state },
-    { "right-pinned", NULL, NULL, "true", pnl_dock_bin_pinned_change_state },
-    { "top-pinned", NULL, NULL, "true", pnl_dock_bin_pinned_change_state },
-    { "bottom-pinned", NULL, NULL, "true", pnl_dock_bin_pinned_change_state },
   };
 
   gtk_widget_set_has_window (GTK_WIDGET (self), TRUE);
