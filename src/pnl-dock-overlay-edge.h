@@ -1,4 +1,4 @@
-/* pnl.h
+/* pnl-dock-overlay-edge.h
  *
  * Copyright (C) 2016 Christian Hergert <chergert@redhat.com>
  *
@@ -16,38 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PNL_H
-#define PNL_H
+#if !defined(PNL_INSIDE) && !defined(PNL_COMPILATION)
+# error "Only <pnl.h> can be included directly."
+#endif
 
-#include <gtk/gtk.h>
+#ifndef PNL_DOCK_OVERLAY_EDGE_H
+#define PNL_DOCK_OVERLAY_EDGE_H
+
+#include "pnl-dock-types.h"
 
 G_BEGIN_DECLS
 
-#define PNL_INSIDE
-
-#include "pnl-dock.h"
-#include "pnl-dock-bin.h"
-#include "pnl-dock-bin-edge.h"
-#include "pnl-dock-overlay.h"
-#include "pnl-dock-overlay-edge.h"
-#include "pnl-dock-item.h"
-#include "pnl-dock-manager.h"
-#include "pnl-dock-paned.h"
-#include "pnl-dock-revealer.h"
-#include "pnl-dock-stack.h"
-#include "pnl-dock-types.h"
-#include "pnl-dock-widget.h"
-#include "pnl-dock-window.h"
-
-#include "pnl-bin.h"
-#include "pnl-tab.h"
-#include "pnl-tab-strip.h"
-#include "pnl-multi-paned.h"
-
-#include "pnl-version.h"
-
-#undef PNL_INSIDE
+GtkPositionType pnl_dock_overlay_edge_get_edge     (PnlDockOverlayEdge *self);
+void            pnl_dock_overlay_edge_set_edge     (PnlDockOverlayEdge *self,
+                                                    GtkPositionType     edge);
+gint            pnl_dock_overlay_edge_get_position (PnlDockOverlayEdge *self);
+void            pnl_dock_overlay_edge_set_position (PnlDockOverlayEdge *self,
+                                                    gint                position);
 
 G_END_DECLS
 
-#endif /* PNL_H */
+#endif /* PNL_DOCK_OVERLAY_EDGE_H */
