@@ -33,7 +33,6 @@ G_BEGIN_DECLS
 
 #define PNL_TYPE_CHILD_PROPERTY_ACTION  (pnl_child_property_action_get_type())
 #define PNL_TYPE_DOCK                   (pnl_dock_get_type ())
-#define PNL_TYPE_DOCK_BAR               (pnl_dock_bar_get_type())
 #define PNL_TYPE_DOCK_BIN               (pnl_dock_bin_get_type())
 #define PNL_TYPE_DOCK_BIN_EDGE          (pnl_dock_bin_edge_get_type())
 #define PNL_TYPE_DOCK_ITEM              (pnl_dock_item_get_type())
@@ -48,7 +47,6 @@ G_BEGIN_DECLS
 #define PNL_TYPE_TAB_STRIP              (pnl_tab_strip_get_type())
 #define PNL_TYPE_TAB_STYLE              (pnl_tab_style_get_type())
 
-G_DECLARE_DERIVABLE_TYPE (PnlDockBar,             pnl_dock_bar,               PNL, DOCK_BAR,              PnlBin)
 G_DECLARE_DERIVABLE_TYPE (PnlDockBin,             pnl_dock_bin,               PNL, DOCK_BIN,              GtkContainer)
 G_DECLARE_DERIVABLE_TYPE (PnlDockBinEdge,         pnl_dock_bin_edge,          PNL, DOCK_BIN_EDGE,         PnlDockRevealer)
 G_DECLARE_DERIVABLE_TYPE (PnlDockManager,         pnl_dock_manager,           PNL, DOCK_MANAGER,          GObject)
