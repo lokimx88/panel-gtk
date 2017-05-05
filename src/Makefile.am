@@ -9,7 +9,6 @@ headersdir = $(includedir)/panel-gtk-@API_VERSION@
 headers_DATA = \
 	pnl-animation.h \
 	pnl-bin.h \
-	pnl-dock-bar.h \
 	pnl-dock-bin.h \
 	pnl-dock-item.h \
 	pnl-dock-manager.h \
@@ -34,7 +33,6 @@ libpanel_gtk_@API_VERSION@_la_SOURCES = \
 	pnl-animation.c \
 	pnl-child-property-action.c \
 	pnl-bin.c \
-	pnl-dock-bar.c \
 	pnl-dock-bin-edge-private.h \
 	pnl-dock-bin-edge.c \
 	pnl-dock-bin.c \
