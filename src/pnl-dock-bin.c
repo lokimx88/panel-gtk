@@ -2154,7 +2154,7 @@ pnl_dock_bin_get_child_visible (PnlDockItem *item,
       (ancestor == priv->children [1].widget) ||
       (ancestor == priv->children [2].widget) ||
       (ancestor == priv->children [3].widget))
-    return pnl_dock_revealer_get_reveal_child (PNL_DOCK_REVEALER (ancestor));
+    return pnl_dock_revealer_get_child_revealed (PNL_DOCK_REVEALER (ancestor));
 
   return FALSE;
 }
