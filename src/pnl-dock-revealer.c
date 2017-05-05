@@ -203,6 +203,9 @@ pnl_dock_revealer_calculate_duration (PnlDockRevealer *self)
 
   g_assert (PNL_IS_DOCK_REVEALER (self));
 
+  if (!gtk_widget_get_realized (GTK_WIDGET (self)))
+    return 0;
+
   child = gtk_bin_get_child (GTK_BIN (self));
 
   if (child == NULL)
@@ -278,22 +281,15 @@ pnl_dock_revealer_set_reveal_child (PnlDockRevealer *self,
 
           duration = pnl_dock_revealer_calculate_duration (self);
 
-          if (gtk_widget_get_realized (GTK_WIDGET (self)))
-            {
-              animation = pnl_object_animate_full (priv->adjustment,
-                                                   PNL_ANIMATION_EASE_IN_OUT_CUBIC,
-                                                   duration,
-                                                   gtk_widget_get_frame_clock (GTK_WIDGET (self)),
-                                                   pnl_dock_revealer_animation_done,
-                                                   g_object_ref (self),
-                                                   "value", reveal_child ? 1.0 : 0.0,
-                                                   NULL);
-              pnl_set_weak_pointer (&priv->animation, animation);
-            }
-          else
-            {
-              gtk_adjustment_set_value (priv->adjustment, reveal_child ? 1.0 : 0.0);
-            }
+          animation = pnl_object_animate_full (priv->adjustment,
+                                               PNL_ANIMATION_EASE_IN_OUT_CUBIC,
+                                               duration,
+                                               gtk_widget_get_frame_clock (GTK_WIDGET (self)),
+                                               pnl_dock_revealer_animation_done,
+                                               g_object_ref (self),
+                                               "value", reveal_child ? 1.0 : 0.0,
+                                               NULL);
+          pnl_set_weak_pointer (&priv->animation, animation);
         }
 
       g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_REVEAL_CHILD]);
