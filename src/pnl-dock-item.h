@@ -47,7 +47,7 @@ struct _PnlDockItemInterface
   gchar          *(*get_title)          (PnlDockItem     *self);
   gchar          *(*get_icon_name)      (PnlDockItem     *self);
   gboolean        (*get_can_close)      (PnlDockItem     *self);
-  gboolean        (*get_can_minimize)   (PnlDockItem     *self,
+  gboolean        (*can_minimize)       (PnlDockItem     *self,
                                          PnlDockItem     *descendant);
   gboolean        (*close)              (PnlDockItem     *self);
   gboolean        (*minimize)           (PnlDockItem     *self,

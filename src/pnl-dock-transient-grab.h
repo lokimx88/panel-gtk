@@ -27,6 +27,10 @@
 
 G_BEGIN_DECLS
 
+#define PNL_TYPE_DOCK_TRANSIENT_GRAB (pnl_dock_transient_grab_get_type())
+
+G_DECLARE_FINAL_TYPE (PnlDockTransientGrab, pnl_dock_transient_grab, PNL, DOCK_TRANSIENT_GRAB, GObject)
+
 PnlDockTransientGrab *pnl_dock_transient_grab_new                    (void);
 void                  pnl_dock_transient_grab_add_item               (PnlDockTransientGrab *self,
                                                                       PnlDockItem          *item);

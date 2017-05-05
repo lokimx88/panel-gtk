@@ -31,7 +31,6 @@
 
 G_BEGIN_DECLS
 
-#define PNL_TYPE_CHILD_PROPERTY_ACTION  (pnl_child_property_action_get_type())
 #define PNL_TYPE_DOCK                   (pnl_dock_get_type ())
 #define PNL_TYPE_DOCK_BIN               (pnl_dock_bin_get_type())
 #define PNL_TYPE_DOCK_BIN_EDGE          (pnl_dock_bin_edge_get_type())
@@ -40,7 +39,6 @@ G_BEGIN_DECLS
 #define PNL_TYPE_DOCK_PANED             (pnl_dock_paned_get_type())
 #define PNL_TYPE_DOCK_STACK             (pnl_dock_stack_get_type())
 #define PNL_TYPE_DOCK_TAB_STRIP         (pnl_dock_tab_strip_get_type())
-#define PNL_TYPE_DOCK_TRANSIENT_GRAB    (pnl_dock_transient_grab_get_type())
 #define PNL_TYPE_DOCK_WIDGET            (pnl_dock_widget_get_type())
 #define PNL_TYPE_DOCK_WINDOW            (pnl_dock_window_get_type())
 #define PNL_TYPE_TAB                    (pnl_tab_get_type())
@@ -56,8 +54,6 @@ G_DECLARE_DERIVABLE_TYPE (PnlDockWidget,          pnl_dock_widget,            PN
 G_DECLARE_DERIVABLE_TYPE (PnlDockWindow,          pnl_dock_window,            PNL, DOCK_WINDOW,           GtkWindow)
 G_DECLARE_DERIVABLE_TYPE (PnlTabStrip,            pnl_tab_strip,              PNL, TAB_STRIP,             GtkBox)
 
-G_DECLARE_FINAL_TYPE     (PnlChildPropertyAction, pnl_child_property_action,  PNL, CHILD_PROPERTY_ACTION, GObject)
-G_DECLARE_FINAL_TYPE     (PnlDockTransientGrab,   pnl_dock_transient_grab,    PNL, DOCK_TRANSIENT_GRAB,   GObject)
 G_DECLARE_FINAL_TYPE     (PnlTab,                 pnl_tab,                    PNL, TAB,                   PnlBin)
 
 G_DECLARE_INTERFACE      (PnlDock,                pnl_dock,                   PNL, DOCK,                  GtkContainer)

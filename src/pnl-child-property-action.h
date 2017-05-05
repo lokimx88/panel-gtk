@@ -27,6 +27,10 @@
 
 G_BEGIN_DECLS
 
+#define PNL_TYPE_CHILD_PROPERTY_ACTION  (pnl_child_property_action_get_type())
+
+G_DECLARE_FINAL_TYPE (PnlChildPropertyAction, pnl_child_property_action,  PNL, CHILD_PROPERTY_ACTION, GObject)
+
 G_END_DECLS
 
 #endif /* PNL_CHILD_PROPERTY_ACTION_H */

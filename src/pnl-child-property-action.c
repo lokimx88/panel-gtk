@@ -23,7 +23,7 @@
 
 struct _PnlChildPropertyAction
 {
-  GObject parent_instance;
+  GObject       parent_instance;
 
   GtkContainer *container;
   GtkWidget    *child;

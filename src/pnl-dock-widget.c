@@ -44,6 +44,28 @@ enum {
 
 static GParamSpec *properties [N_PROPS];
 
+static gchar *
+pnl_dock_widget_item_get_title (PnlDockItem *item)
+{
+  PnlDockWidget *self = (PnlDockWidget *)item;
+  PnlDockWidgetPrivate *priv = pnl_dock_widget_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_DOCK_WIDGET (self), NULL);
+
+  return g_strdup (priv->title);
+}
+
+static gchar *
+pnl_dock_widget_item_get_icon_name (PnlDockItem *item)
+{
+  PnlDockWidget *self = (PnlDockWidget *)item;
+  PnlDockWidgetPrivate *priv = pnl_dock_widget_get_instance_private (self);
+
+  g_return_val_if_fail (PNL_IS_DOCK_WIDGET (self), NULL);
+
+  return g_strdup (priv->icon_name);
+}
+
 static gboolean
 pnl_dock_widget_get_can_close (PnlDockItem *item)
 {
@@ -115,7 +137,7 @@ pnl_dock_widget_get_property (GObject    *object,
       break;
 
     case PROP_ICON_NAME:
-      g_value_set_string (value, pnl_dock_widget_get_icon_name (self));
+      g_value_set_string (value, pnl_dock_widget_item_get_icon_name (PNL_DOCK_ITEM (self)));
       break;
 
     case PROP_MANAGER:
@@ -123,7 +145,7 @@ pnl_dock_widget_get_property (GObject    *object,
       break;
 
     case PROP_TITLE:
-      g_value_set_string (value, pnl_dock_widget_get_title (self));
+      g_value_set_string (value, pnl_dock_widget_item_get_title (PNL_DOCK_ITEM (self)));
       break;
 
     default:
@@ -220,27 +242,6 @@ pnl_dock_widget_new (void)
   return g_object_new (PNL_TYPE_DOCK_WIDGET, NULL);
 }
 
-static gchar *
-pnl_dock_widget_item_get_title (PnlDockItem *item)
-{
-  PnlDockWidget *self = (PnlDockWidget *)item;
-  PnlDockWidgetPrivate *priv = pnl_dock_widget_get_instance_private (self);
-
-  g_return_val_if_fail (PNL_IS_DOCK_WIDGET (self), NULL);
-
-  return g_strdup (priv->title);
-}
-
-const gchar *
-pnl_dock_widget_get_title (PnlDockWidget *self)
-{
-  PnlDockWidgetPrivate *priv = pnl_dock_widget_get_instance_private (self);
-
-  g_return_val_if_fail (PNL_IS_DOCK_WIDGET (self), NULL);
-
-  return priv->title;
-}
-
 void
 pnl_dock_widget_set_title (PnlDockWidget *self,
                            const gchar   *title)
@@ -255,27 +256,6 @@ pnl_dock_widget_set_title (PnlDockWidget *self,
       priv->title = g_strdup (title);
       g_object_notify_by_pspec (G_OBJECT (self), properties [PROP_TITLE]);
     }
-}
-
-static gchar *
-pnl_dock_widget_item_get_icon_name (PnlDockItem *item)
-{
-  PnlDockWidget *self = (PnlDockWidget *)item;
-  PnlDockWidgetPrivate *priv = pnl_dock_widget_get_instance_private (self);
-
-  g_return_val_if_fail (PNL_IS_DOCK_WIDGET (self), NULL);
-
-  return g_strdup (priv->icon_name);
-}
-
-const gchar *
-pnl_dock_widget_get_icon_name (PnlDockWidget *self)
-{
-  PnlDockWidgetPrivate *priv = pnl_dock_widget_get_instance_private (self);
-
-  g_return_val_if_fail (PNL_IS_DOCK_WIDGET (self), NULL);
-
-  return priv->icon_name;
 }
 
 void
